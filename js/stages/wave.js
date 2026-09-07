@@ -13,7 +13,9 @@ export const caption = {
 
 const N_RED = 1.3311, N_VIO = 1.3435;            // water at 650 nm and 420 nm
 const LAM_RED = 20, LAM_VIO = 20 * 420 / 650;   // grid cells per wavelength
-const C0 = 0.5, LAYER = 22, SRC_X = 28, STEPS = 6, AMP = 0.45;   // AMP calibrated so the plane wave has amplitude ~0.7
+const C0 = 0.5, LAYER = 22, SRC_X = 28, AMP = 0.45;   // AMP calibrated so the plane wave has amplitude ~0.7
+const SPEED = 22;          // crest speed on screen, grid cells per second (a red crest passes about once a second)
+const WARM_STEPS = 2600;   // burst through the start-up so the wave has already crossed the screen
 const TILT = 31 * Math.PI / 180;                 // surface tangent angle; light hits at 59°, like the drop
 
 const VS = `#version 300 es
@@ -52,7 +54,7 @@ void main(){
   o = vec4(col, 1.0);
 }`;
 
-let gl = null, glc = null, prog = {}, tex = [], fb = [], SW = 0, SH = 0, t = 0, dead = false, cur = 0, phase = 0;
+let gl = null, glc = null, prog = {}, tex = [], fb = [], SW = 0, SH = 0, t = 0, dead = false, cur = 0, phase = 0, acc = 0, lastTime = 0;
 
 function shader(type, src) { const s = gl.createShader(type); gl.shaderSource(s, src); gl.compileShader(s); if (!gl.getShaderParameter(s, gl.COMPILE_STATUS)) throw new Error(gl.getShaderInfoLog(s)); return s; }
 function program(fs) { const p = gl.createProgram(); gl.attachShader(p, shader(gl.VERTEX_SHADER, VS)); gl.attachShader(p, shader(gl.FRAGMENT_SHADER, fs)); gl.linkProgram(p); if (!gl.getProgramParameter(p, gl.LINK_STATUS)) throw new Error(gl.getProgramInfoLog(p)); const u = {}; for (let i = 0; i < gl.getProgramParameter(p, gl.ACTIVE_UNIFORMS); i++) { const n = gl.getActiveUniform(p, i).name; u[n] = gl.getUniformLocation(p, n); } return { p, u }; }
@@ -95,7 +97,7 @@ function arc() {
 }
 function nViolet(S) { return S.split ? N_RED + (N_VIO - N_RED) * 10 : N_VIO; }
 
-function simulate(S) {
+function simulate(S, time) {
   mid = [S.V.cx / S.W, 1 - S.V.cy / S.H];
   const a = arc(), wR = C0 * 2 * Math.PI / LAM_RED, wV = C0 * 2 * Math.PI / LAM_VIO;
   gl.viewport(0, 0, SW, SH); gl.useProgram(prog.step.p);
@@ -103,7 +105,10 @@ function simulate(S) {
   gl.uniform2f(u.T, 1 / SW, 1 / SH); gl.uniform2f(u.dim, SW, SH); gl.uniform2f(u.arcC, a.cx, a.cy); gl.uniform1f(u.arcR, a.R);
   gl.uniform1f(u.nR, N_RED); gl.uniform1f(u.nV, nViolet(S)); gl.uniform1f(u.wR, wR); gl.uniform1f(u.wV, wV);
   gl.uniform1f(u.aR, 2 * C0 * wR * AMP); gl.uniform1f(u.aV, 2 * C0 * wV * AMP);
-  const steps = S.reduced ? 2 : STEPS;
+  const dt = lastTime ? Math.min(100, time - lastTime) : 16; lastTime = time;
+  acc += dt / 1000 * (SPEED / C0) * (S.reduced ? 0.6 : 1);
+  let steps = Math.floor(acc); acc -= steps;
+  if (t < WARM_STEPS) steps = Math.min(WARM_STEPS - t, 220);
   for (let i = 0; i < steps; i++) {
     gl.uniform1f(u.t, t); gl.uniform1f(u.ramp, Math.min(1, t / 120));
     gl.bindFramebuffer(gl.FRAMEBUFFER, fb[1 - cur]); gl.bindTexture(gl.TEXTURE_2D, tex[cur]);
@@ -115,7 +120,7 @@ function simulate(S) {
 }
 
 // Keep the sim warm while the previous stage is on screen so the wave has arrived when we get here.
-export function warm(W, H, S) { if (setup(W, H)) simulate(S); }
+export function warm(W, H, S, time) { if (setup(W, H)) simulate(S, time); }
 
 // 2D stand-in when WebGL float textures are unavailable: crests drawn analytically.
 function fallback(g, W, H, S, time) {
@@ -144,7 +149,7 @@ function fallback(g, W, H, S, time) {
 export function box() { return { x: 0, y: 0, w: 1 }; }
 
 export function draw(g, W, H, S, time) {
-  if (setup(W, H)) { simulate(S); g.imageSmoothingEnabled = true; g.drawImage(glc, 0, 0, W, H); }
+  if (setup(W, H)) { simulate(S, time); g.imageSmoothingEnabled = true; g.drawImage(glc, 0, 0, W, H); }
   else fallback(g, W, H, S, time);
 
   const V = S.V, cellPx = SW ? W / SW : (W / 22) / LAM_RED, micron = (1000 / 650) * LAM_RED * cellPx;

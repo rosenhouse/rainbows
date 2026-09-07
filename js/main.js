@@ -100,6 +100,11 @@ function render(time) {
   let drewWave = false;
   if (f < 0.001) STAGES[k].draw(g, W, H, S, time);
   else if (f > 0.999) { STAGES[k + 1].draw(g, W, H, S, time); drewWave = k + 1 === 4; }
+  else if (STAGES[k].ownTransition) {
+    STAGES[k].draw(g, W, H, S, time, f);
+    const aIn = smooth((f - 0.62) / 0.38);
+    if (aIn > 0) { g.save(); g.globalAlpha = aIn; STAGES[k + 1].draw(g, W, H, S, time); g.restore(); }
+  }
   else {
     const A = STAGES[k], B = STAGES[k + 1], bx = A.box(W, H, S), w = bx.w / W, M = 1 / w, m = Math.pow(M, f);
     const P = { x: (W / 2 - M * bx.x) / (1 - M), y: (H / 2 - M * bx.y) / (1 - M) };
@@ -122,7 +127,7 @@ function render(time) {
     g.save(); g.setLineDash([4, 4]); g.strokeStyle = 'rgba(234,240,255,.5)'; g.lineWidth = 1;
     g.strokeRect(bx.x - bw / 2, bx.y - bh / 2, bw, bh); g.restore();
   }
-  if (!drewWave && z > 2.6) wave.warm(W, H, S);
+  if (!drewWave && z > 2.6) wave.warm(W, H, S, time);
 }
 
 function frame(time) {

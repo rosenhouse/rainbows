@@ -12,12 +12,13 @@ export const caption = {
 const rainSeed = prng(5);
 const rain = Array.from({ length: 110 }, () => ({ x: rainSeed(), y: rainSeed(), l: 0.6 + rainSeed() * 0.8 }));
 
-function geo(S) {
+export function geo(S) {
   const V = S.V;
-  const hy = V.y0 + V.h * 0.56;                    // horizon
-  const s = V.h * 0.62 / 42;                       // pixels per degree
-  const cx = V.cx, cy = hy + S.sun * s;            // antisolar point: sun elevation below the horizon
-  return { hy, s, cx, cy, r: 42 * s, obs: { x: V.cx, y: hy + V.h * 0.3, h: V.h * 0.2 } };
+  const hy = V.y0 + V.h * 0.56;                    // horizon, also the camera's principal point
+  const F = V.h * 0.62 / Math.tan(42 * Math.PI / 180);   // focal length in px: a 42° bow is 0.62 of the view tall
+  const s = a => F * Math.tan(a * Math.PI / 180);        // pixels from the antisolar point for an angle
+  const cx = V.cx, cy = hy + s(S.sun);             // antisolar point: sun elevation below the horizon
+  return { hy, F, s, cx, cy, r: s(42), obs: { x: V.cx, y: hy + V.h * 0.3, h: V.h * 0.2 } };
 }
 
 export function box(W, H, S) {
@@ -26,7 +27,7 @@ export function box(W, H, S) {
 }
 
 export function draw(g, W, H, S, t) {
-  const V = S.V, { hy, s, cx, cy, r, obs } = geo(S);
+  const V = S.V, { hy, F, s, cx, cy, r, obs } = geo(S);
 
   // Storm sky, darkest opposite the Sun; a little warmth where the sun is (behind us, low)
   let gr = g.createLinearGradient(0, 0, 0, hy);
@@ -50,12 +51,12 @@ export function draw(g, W, H, S, t) {
   gr.addColorStop(0, 'rgba(255,255,255,.08)'); gr.addColorStop(0.85, 'rgba(255,255,255,.06)'); gr.addColorStop(1, 'rgba(255,255,255,0)');
   g.fillStyle = gr; g.fillRect(0, 0, W, hy);
   // The bow: one arc per wavelength at its own angle, red outermost
-  const bands = 14, bw = s * 0.2;
+  const bands = 14, bw = F * 0.0035;
   for (let pass = 0; pass < 2; pass++) {
     for (let i = 0; i < bands; i++) {
       const l = 400 + (300 * i) / (bands - 1), a = bowAngle(nWater(l)), col = wlColor(l);
       g.strokeStyle = rgb(col, pass ? 0.9 : 0.12); g.lineWidth = pass ? bw * 1.15 : bw * 4;
-      g.beginPath(); g.arc(cx, cy, a * s, Math.PI, 2 * Math.PI); g.stroke();
+      g.beginPath(); g.arc(cx, cy, s(a), Math.PI, 2 * Math.PI); g.stroke();
     }
   }
   g.restore();

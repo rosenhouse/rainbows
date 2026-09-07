@@ -18,7 +18,7 @@ def as_module_object(name, src):
     return f"const {name} = (() => {{\n{body}\nreturn {{ {', '.join(names)} }};\n}})();\n"
 
 js = [as_plain((root / 'js/physics.js').read_text()), as_plain((root / 'js/draw.js').read_text())]
-for st in ['orbit', 'sky', 'rain', 'drop', 'wave']:
+for st in ['sky', 'orbit', 'rain', 'drop', 'wave']:   # sky first: orbit uses its geometry
     js.append(as_module_object(st, (root / f'js/stages/{st}.js').read_text()))
 js.append(strip_imports((root / 'js/main.js').read_text()))
 css = (root / 'css/app.css').read_text()
