@@ -6,7 +6,7 @@ export const scaleM = 1e2;
 export const controls = ['sun'];
 export const caption = {
   title: 'Sun behind you, rain ahead',
-  body: 'Stand with the Sun at your back. The bow is a circle 42° wide, centred on the point opposite the Sun. When the Sun is low that point sits just below the horizon and the bow stands tall. Raise the Sun and the whole bow sinks with it.',
+  body: 'Stand with the Sun at your back. Your bow is a circle 42° wide, centred on the point opposite the Sun, and the circle never changes size. When the Sun is low that centre sits just below the horizon and you see a tall arc. Raise the Sun and the centre sinks, taking the bow down with it. From a plane you could see the whole circle.',
 };
 
 const rainSeed = prng(5);
@@ -62,9 +62,36 @@ export function draw(g, W, H, S, t) {
   g.restore();
 
   // Your shadow runs toward the point opposite the Sun
+  const k = 1 / (1 + 4 * Math.tan(S.sun * Math.PI / 180)), tip = { x: obs.x + (cx - obs.x) * k, y: obs.y + (cy - obs.y) * k };
   g.fillStyle = 'rgba(0,0,0,.35)';
   g.beginPath(); g.moveTo(obs.x - obs.h * 0.2, obs.y); g.lineTo(obs.x + obs.h * 0.2, obs.y);
-  g.lineTo(cx + 2, hy); g.lineTo(cx - 2, hy); g.closePath(); g.fill();
+  g.lineTo(tip.x + 3, tip.y); g.lineTo(tip.x - 3, tip.y); g.closePath(); g.fill();
+
+  // The rest of the circle, hidden below the horizon, so it is clear the bow sinks rather than shrinks
+  g.save(); g.beginPath(); g.rect(0, hy, W, H - hy); g.clip();
+  g.setLineDash([3, 7]); g.strokeStyle = 'rgba(234,240,255,.28)'; g.lineWidth = 1.2;
+  g.beginPath(); g.arc(cx, cy, r, 0, Math.PI * 2); g.stroke(); g.setLineDash([]);
+  g.strokeStyle = 'rgba(234,240,255,.6)'; g.beginPath(); g.moveTo(cx - 6, cy); g.lineTo(cx + 6, cy); g.moveTo(cx, cy - 6); g.lineTo(cx, cy + 6); g.stroke();
+  g.restore();
+  if (cy > hy + 8) label(g, 'centre of the bow, ' + Math.round(S.sun) + '° below the horizon', cx, Math.min(cy, V.y1 - 40) + 18, 'center', INK2);
+
+  // A rear-view mirror: the one place in this picture you can see the Sun behind you
+  const mw = Math.min(V.w * 0.36, 230), mh = mw * 0.4, mx = V.x1 - mw - 6, my = V.y0 + 26;
+  g.strokeStyle = 'rgba(234,240,255,.35)'; g.lineWidth = 3; g.beginPath(); g.moveTo(mx + mw / 2, V.y0 - 40); g.lineTo(mx + mw / 2, my); g.stroke();
+  g.save(); g.beginPath(); g.roundRect(mx, my, mw, mh, 8); g.clip();
+  const mhy = my + mh * 0.62, Fm = mh * 0.5;
+  gr = g.createLinearGradient(0, my, 0, mhy);
+  gr.addColorStop(0, '#2B3A6E'); gr.addColorStop(0.7, '#B96A4A'); gr.addColorStop(1, '#F2B266');
+  g.fillStyle = gr; g.fillRect(mx, my, mw, mh);
+  const sunY = mhy - Fm * Math.tan(S.sun * Math.PI / 180), sunR = mh * 0.075;
+  gr = g.createRadialGradient(mx + mw / 2, sunY, sunR * 0.5, mx + mw / 2, sunY, sunR * 5);
+  gr.addColorStop(0, 'rgba(255,220,140,.7)'); gr.addColorStop(1, 'rgba(255,220,140,0)');
+  g.fillStyle = gr; g.fillRect(mx, my, mw, mh);
+  g.fillStyle = '#FFE9A8'; g.beginPath(); g.arc(mx + mw / 2, sunY, sunR, 0, 7); g.fill();
+  g.fillStyle = '#141C18'; g.fillRect(mx, mhy, mw, mh);
+  g.restore();
+  g.strokeStyle = 'rgba(234,240,255,.55)'; g.lineWidth = 2; g.beginPath(); g.roundRect(mx, my, mw, mh, 8); g.stroke();
+  label(g, 'in the mirror: the Sun, behind you', mx + mw, my + mh + 16, 'right', INK2);
 
   // You, seen from behind, rim-lit by the low Sun
   const hh = obs.h;
@@ -75,8 +102,7 @@ export function draw(g, W, H, S, t) {
   g.beginPath(); g.moveTo(obs.x - hh * 0.16, obs.y); g.lineTo(obs.x - hh * 0.16, obs.y - hh * 0.66); g.stroke();
   g.beginPath(); g.arc(obs.x, obs.y - hh * 0.85, hh * 0.13, Math.PI * 0.7, Math.PI * 1.5); g.stroke();
 
-  label(g, 'the Sun is behind you, ' + Math.round(S.sun) + '° up', V.x0 + 14, V.y1 - 14, 'left', INK2);
   label(g, 'horizon', W - 14, hy - 12, 'right', INK2);
   if (cy - r > hy) label(g, 'the bow is below the horizon now', cx, hy - V.h * 0.2, 'center');
-  else label(g, '42° from the point opposite the Sun', cx - r * 0.35, Math.max(V.y0 + 14, cy - r * 0.94 - 16), 'right', INK2);
+  else label(g, '42° from the centre', cx, Math.max(V.y0 + 14, cy - r - 16), 'center', INK2);
 }
