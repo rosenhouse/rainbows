@@ -12,22 +12,38 @@ export const caption = {
 const rainSeed = prng(5);
 const rain = Array.from({ length: 110 }, () => ({ x: rainSeed(), y: rainSeed(), l: 0.6 + rainSeed() * 0.8 }));
 
+// The camera stands just behind your head, looking level, away from the Sun. Everything in the
+// sky is placed by true perspective so it lands exactly on the orbit stage's 3D picture.
 export function geo(S) {
-  const V = S.V;
+  const V = S.V, e = S.sun * Math.PI / 180;
   const hy = V.y0 + V.h * 0.56;                    // horizon, also the camera's principal point
   const F = V.h * 0.62 / Math.tan(42 * Math.PI / 180);   // focal length in px: a 42° bow is 0.62 of the view tall
-  const s = a => F * Math.tan(a * Math.PI / 180);        // pixels from the antisolar point for an angle
-  const cx = V.cx, cy = hy + s(S.sun);             // antisolar point: sun elevation below the horizon
-  return { hy, F, s, cx, cy, r: s(42), obs: { x: V.cx, y: hy + V.h * 0.3, h: V.h * 0.2 } };
+  const cx = V.cx, cy = hy + F * Math.tan(e);      // the point opposite the Sun: sun elevation below the horizon
+  // directions in a level frame: x forward (away from the Sun, level), y up, z to the right
+  const A = [Math.cos(e), -Math.sin(e), 0];        // opposite the Sun
+  const project = d => d[0] > 1e-4 ? { x: cx + F * d[2] / d[0], y: hy - F * d[1] / d[0], ok: true } : { ok: false };
+  // a point on the cone: ang from the axis, th around it (th = 90° is the top)
+  const upA = [Math.sin(e), Math.cos(e), 0], side = [0, 0, 1];
+  const cone = (ang, th) => { const ca = Math.cos(ang), sa = Math.sin(ang), ct = Math.cos(th), st = Math.sin(th);
+    return [A[0] * ca + (upA[0] * st + side[0] * ct) * sa, A[1] * ca + (upA[1] * st + side[1] * ct) * sa, A[2] * ca + (upA[2] * st + side[2] * ct) * sa]; };
+  return { hy, F, cx, cy, project, cone, r: F * Math.tan(42 * Math.PI / 180), obs: { x: V.cx, y: hy + V.h * 0.3, h: V.h * 0.2 } };
 }
 
 export function box(W, H, S) {
-  const { cx, cy, r, hy } = geo(S), th = 78 * Math.PI / 180;
-  return { x: cx + r * Math.cos(th), y: Math.min(cy - r * Math.sin(th), hy - H * 0.05), w: W * 0.09 };
+  const { project, cone, hy } = geo(S), q = project(cone(42 * Math.PI / 180, 78 * Math.PI / 180));
+  return { x: q.x, y: Math.min(q.y, hy - H * 0.05), w: W * 0.09 };
 }
 
+// Trace one angular ring of the cone; returns the run of points above the horizon and below it.
+function ring(G, ang, n = 180) {
+  const above = [], below = [];
+  for (let k = 0; k <= n; k++) { const d = G.cone(ang, (k / n) * Math.PI * 2), q = G.project(d); if (!q.ok) continue; (d[1] > 0 ? above : below).push(q); }
+  return { above, below };
+}
+function stroke(g, pts) { if (pts.length < 2) return; g.beginPath(); pts.forEach((q, i) => i ? g.lineTo(q.x, q.y) : g.moveTo(q.x, q.y)); g.stroke(); }
+
 export function draw(g, W, H, S, t) {
-  const V = S.V, { hy, F, s, cx, cy, r, obs } = geo(S);
+  const V = S.V, G = geo(S), { hy, F, cx, cy, r, obs } = G;
 
   // Storm sky, darkest opposite the Sun; a little warmth where the sun is (behind us, low)
   let gr = g.createLinearGradient(0, 0, 0, hy);
@@ -50,14 +66,11 @@ export function draw(g, W, H, S, t) {
   gr = g.createRadialGradient(cx, cy, 0, cx, cy, r);
   gr.addColorStop(0, 'rgba(255,255,255,.08)'); gr.addColorStop(0.85, 'rgba(255,255,255,.06)'); gr.addColorStop(1, 'rgba(255,255,255,0)');
   g.fillStyle = gr; g.fillRect(0, 0, W, hy);
-  // The bow: one arc per wavelength at its own angle, red outermost
-  const bands = 14, bw = F * 0.0035;
-  for (let pass = 0; pass < 2; pass++) {
-    for (let i = 0; i < bands; i++) {
-      const l = 400 + (300 * i) / (bands - 1), a = bowAngle(nWater(l)), col = wlColor(l);
-      g.strokeStyle = rgb(col, pass ? 0.9 : 0.12); g.lineWidth = pass ? bw * 1.15 : bw * 4;
-      g.beginPath(); g.arc(cx, cy, s(a), Math.PI, 2 * Math.PI); g.stroke();
-    }
+  // The bow: one ring of the cone per wavelength at its own angle, red outermost
+  const bands = 14, bw = F * 0.0035, rings = [];
+  for (let i = 0; i < bands; i++) { const l = 400 + (300 * i) / (bands - 1); rings.push({ col: wlColor(l), ...ring(G, bowAngle(nWater(l)) * Math.PI / 180) }); }
+  for (let pass = 0; pass < 2; pass++) for (const rg of rings) {
+    g.strokeStyle = rgb(rg.col, pass ? 0.9 : 0.12); g.lineWidth = pass ? bw * 1.15 : bw * 4; stroke(g, rg.above);
   }
   g.restore();
 
@@ -70,7 +83,7 @@ export function draw(g, W, H, S, t) {
   // The rest of the circle, hidden below the horizon, so it is clear the bow sinks rather than shrinks
   g.save(); g.beginPath(); g.rect(0, hy, W, H - hy); g.clip();
   g.setLineDash([3, 7]); g.strokeStyle = 'rgba(234,240,255,.28)'; g.lineWidth = 1.2;
-  g.beginPath(); g.arc(cx, cy, r, 0, Math.PI * 2); g.stroke(); g.setLineDash([]);
+  stroke(g, ring(G, 42 * Math.PI / 180).below); g.setLineDash([]);
   g.strokeStyle = 'rgba(234,240,255,.6)'; g.beginPath(); g.moveTo(cx - 6, cy); g.lineTo(cx + 6, cy); g.moveTo(cx, cy - 6); g.lineTo(cx, cy + 6); g.stroke();
   g.restore();
   if (cy > hy + 8) label(g, 'centre of the bow, ' + Math.round(S.sun) + '° below the horizon', cx, Math.min(cy, V.y1 - 40) + 18, 'center', INK2);
@@ -103,6 +116,7 @@ export function draw(g, W, H, S, t) {
   g.beginPath(); g.arc(obs.x, obs.y - hh * 0.85, hh * 0.13, Math.PI * 0.7, Math.PI * 1.5); g.stroke();
 
   label(g, 'horizon', W - 14, hy - 12, 'right', INK2);
-  if (cy - r > hy) label(g, 'the bow is below the horizon now', cx, hy - V.h * 0.2, 'center');
-  else label(g, '42° from the centre', cx, Math.max(V.y0 + 14, cy - r - 16), 'center', INK2);
+  const top = G.project(G.cone(42 * Math.PI / 180, Math.PI / 2));
+  if (top.y > hy) label(g, 'the bow is below the horizon now', cx, hy - V.h * 0.2, 'center');
+  else label(g, '42° from the centre', cx, Math.max(V.y0 + 14, top.y - 16), 'center', INK2);
 }
