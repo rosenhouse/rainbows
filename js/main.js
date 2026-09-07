@@ -107,8 +107,10 @@ function render(time) {
     if (aIn > 0) { g.save(); g.globalAlpha = aIn; STAGES[k + 1].draw(g, W, H, S, time); g.restore(); }
   }
   else {
-    const A = STAGES[k], B = STAGES[k + 1], bx = A.box(W, H, S), w = bx.w / W, M = 1 / w, m = Math.pow(M, f);
-    const P = { x: (W / 2 - M * bx.x) / (1 - M), y: (H / 2 - M * bx.y) / (1 - M) };
+    // The zoom target is the visible region V (what the stages lay out into), not the whole
+    // canvas: the box in stage A grows into V of stage B, so the two pictures line up under the panel too.
+    const V = S.V, A = STAGES[k], B = STAGES[k + 1], bx = A.box(W, H, S), w = bx.w / W, M = 1 / w, m = Math.pow(M, f);
+    const P = { x: (V.cx - M * bx.x) / (1 - M), y: (V.cy - M * bx.y) / (1 - M) };
     const aOut = 1 - smooth((f - 0.45) / 0.45), aIn = smooth((f - 0.22) / 0.45);
     if (aOut > 0) {
       g.save(); g.globalAlpha = aOut; g.translate(P.x, P.y); g.scale(m, m); g.translate(-P.x, -P.y);
@@ -116,15 +118,15 @@ function render(time) {
     }
     const m2 = m * w;
     g.save(); g.translate(P.x, P.y); g.scale(m2, m2); g.translate(-P.x, -P.y);
-    g.beginPath(); g.rect(0, 0, W, H); g.clip();
+    g.beginPath(); g.rect(V.x0, V.y0, V.w, V.h); g.clip();
     if (aIn > 0) { g.globalAlpha = aIn; labels.alpha = smooth((f - 0.6) / 0.4); B.draw(g, W, H, S, time); labels.alpha = 1; drewWave = k + 1 === 4; }
     g.globalAlpha = 1 - smooth((f - 0.55) / 0.4);
-    g.strokeStyle = 'rgba(234,240,255,.55)'; g.lineWidth = 1 / m2; g.strokeRect(0, 0, W, H);
+    g.strokeStyle = 'rgba(234,240,255,.55)'; g.lineWidth = 1 / m2; g.strokeRect(V.x0, V.y0, V.w, V.h);
     g.restore();
   }
   // Rest state: hint at where the next zoom lands
   if (f < 0.001 && k < 4 && z < 3.999) {
-    const bx = STAGES[k].box(W, H, S), bw = bx.w, bh = bw * H / W;
+    const V = S.V, bx = STAGES[k].box(W, H, S), bw = bx.w / W * V.w, bh = bx.w / W * V.h;
     g.save(); g.setLineDash([4, 4]); g.strokeStyle = 'rgba(234,240,255,.5)'; g.lineWidth = 1;
     g.strokeRect(bx.x - bw / 2, bx.y - bh / 2, bw, bh); g.restore();
   }
