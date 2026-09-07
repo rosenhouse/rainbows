@@ -1,0 +1,423 @@
+<title>Rainbow Formation Drafts</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,300..800&family=Source+Sans+3:ital,wght@0,400;0,600;1,400&family=JetBrains+Mono:wght@400;500&family=Fraunces:ital,opsz,wght@0,9..144,400;1,9..144,400&display=swap">
+<style>
+:root{
+  --bg:#F2F4F7; --bg2:#FFFFFF; --ink:#151B26; --ink2:#4A5566; --ink3:#8A94A6; --line:#D6DCE6;
+  --accent:#4D57C9; --focus:#4D57C9;
+  --display:'Bricolage Grotesque', 'Helvetica Neue', Arial, sans-serif;
+  --body:'Source Sans 3', 'Segoe UI', Roboto, sans-serif;
+  --mono:'JetBrains Mono', ui-monospace, Menlo, monospace;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#0E121A; --bg2:#151B26; --ink:#EEF1F6; --ink2:#AAB3C2; --ink3:#6D7788; --line:#273040; --accent:#9AA2F2; --focus:#9AA2F2;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0E121A; --bg2:#151B26; --ink:#EEF1F6; --ink2:#AAB3C2; --ink3:#6D7788; --line:#273040; --accent:#9AA2F2; --focus:#9AA2F2;
+}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--body);font-size:17px;line-height:1.5;margin:0}
+main{max-width:1080px;margin:0 auto;padding:32px 20px 96px}
+h1,h2,h3{font-family:var(--display);text-wrap:balance;margin:0;line-height:1.1}
+h1{font-size:clamp(34px,5.5vw,56px);font-weight:600;letter-spacing:-0.02em}
+h2{font-size:clamp(24px,3.4vw,32px);font-weight:600;letter-spacing:-0.015em}
+h3{font-size:19px;font-weight:600}
+p{margin:0;max-width:64ch}
+.eyebrow{font-family:var(--mono);font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:var(--ink3)}
+.spectrum-rule{height:3px;border-radius:2px;background:linear-gradient(90deg,#7b2cff,#3b5bff,#00b0d8,#3ccf5a,#f2d41d,#ff7a1a,#e8202b);margin:18px 0 24px;max-width:280px}
+header{display:grid;gap:14px;margin-bottom:56px}
+header p.lede{font-size:20px;color:var(--ink2)}
+section{margin-top:72px;display:grid;gap:22px}
+.sec-head{display:grid;gap:8px}
+.sec-head p{color:var(--ink2)}
+:focus-visible{outline:2px solid var(--focus);outline-offset:3px}
+
+/* Draft 1: live droplet */
+.lab{display:grid;grid-template-columns:1fr;gap:16px;background:var(--bg2);border:1px solid var(--line);border-radius:14px;padding:16px;overflow:hidden}
+@media (min-width:820px){.lab{grid-template-columns:1fr 280px}}
+.stage{position:relative;background:#070A14;border-radius:10px;overflow:hidden;aspect-ratio:16/10;min-height:260px}
+.stage canvas{width:100%;height:100%;display:block}
+.controls{display:grid;gap:18px;align-content:start}
+.ctl{display:grid;gap:8px}
+.ctl label{display:flex;justify-content:space-between;align-items:baseline;font-size:14px;color:var(--ink2)}
+.ctl label b{font-family:var(--mono);font-weight:500;color:var(--ink);font-variant-numeric:tabular-nums}
+input[type=range]{width:100%;accent-color:var(--accent)}
+.lam{height:10px;border-radius:5px;background:linear-gradient(90deg,#3d00a8 0%,#5a2cff 12%,#2e6dff 25%,#00b0d8 35%,#25c95a 48%,#b7d81a 60%,#ffd21a 68%,#ff8a1a 80%,#ea2a2a 92%,#a50e0e 100%)}
+.seg{display:flex;border:1px solid var(--line);border-radius:8px;overflow:hidden}
+.seg button{flex:1;padding:8px 6px;border:0;background:transparent;color:var(--ink2);font:inherit;font-size:14px;cursor:pointer}
+.seg button[aria-pressed="true"]{background:var(--accent);color:#fff}
+.readouts{display:grid;grid-template-columns:1fr 1fr;gap:8px 16px;border-top:1px solid var(--line);padding-top:14px}
+.readouts div{display:grid;gap:2px}
+.readouts small{font-size:12px;color:var(--ink3);letter-spacing:.06em;text-transform:uppercase;font-family:var(--mono)}
+.readouts span{font-family:var(--mono);font-size:20px;font-variant-numeric:tabular-nums}
+.disp{height:64px;border:1px solid var(--line);border-radius:8px;overflow:hidden}
+.disp canvas{width:100%;height:100%;display:block}
+.note{font-size:14px;color:var(--ink2)}
+
+/* Draft 2: ladder */
+.ladder{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:14px}
+.rung{display:grid;gap:10px;background:var(--bg2);border:1px solid var(--line);border-radius:12px;padding:12px}
+.rung .pic{aspect-ratio:10/7;border-radius:8px;overflow:hidden;background:#070A14}
+.rung canvas{width:100%;height:100%;display:block}
+.rung .scale{font-family:var(--mono);font-size:12px;color:var(--ink3);font-variant-numeric:tabular-nums}
+.rung h3{font-size:17px}
+.rung p{font-size:14px;color:var(--ink2)}
+.ladder-bar{position:relative;height:28px;margin-top:4px}
+.ladder-bar .track{position:absolute;left:0;right:0;top:12px;height:2px;background:var(--line)}
+.ladder-bar .ticks{position:absolute;inset:0;display:flex;justify-content:space-between;font-family:var(--mono);font-size:11px;color:var(--ink3)}
+.ladder-bar .ticks span{position:relative;top:16px}
+
+/* Draft 3: directions */
+.dirs{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:18px}
+.dir{display:grid;gap:12px;align-content:start}
+.dir h3{display:flex;align-items:baseline;gap:10px}
+.dir h3 .tag{font-family:var(--mono);font-size:12px;color:var(--ink3);font-weight:400;letter-spacing:.08em}
+.dir p{font-size:15px;color:var(--ink2)}
+.phone{border-radius:26px;padding:10px;background:var(--line);box-shadow:0 10px 30px rgba(0,0,0,.12)}
+.screen{border-radius:18px;overflow:hidden;aspect-ratio:9/16;display:grid;grid-template-rows:auto 1fr auto;position:relative}
+.screen canvas{width:100%;height:100%;display:block}
+.screen .top,.screen .bot{padding:14px 16px;display:grid;gap:4px}
+.screen .stg{position:relative;overflow:hidden}
+.screen .stg canvas{position:absolute;inset:0}
+/* A: Nightfall */
+.sA{background:#05070F;color:#EAF0FF;font-family:var(--display)}
+.sA .k{font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:#7C88B0;font-family:var(--mono)}
+.sA .t{font-size:22px;font-weight:500;letter-spacing:-.01em}
+.sA .bot{background:linear-gradient(180deg,rgba(5,7,15,0),#05070F 40%)}
+.sA .pill{display:flex;gap:6px}
+.sA .pill i{flex:1;height:3px;border-radius:2px;background:#26304C}
+.sA .pill i.on{background:linear-gradient(90deg,#7b2cff,#e8202b)}
+/* B: Field Notebook */
+.sB{background:#EDF0EE;color:#1E2A2A;font-family:'Fraunces',Georgia,serif}
+.sB .k{font-family:var(--mono);font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:#6A7A78}
+.sB .t{font-size:22px;font-style:italic;font-weight:400}
+.sB .bot{border-top:1px solid #C9D2CF;font-family:var(--body);font-size:13px;color:#4A5A58}
+.sB .bot b{font-family:var(--mono);font-weight:500;color:#1E2A2A}
+/* C: Instrument */
+.sC{background:#0F151C;color:#D7E2EC;font-family:var(--mono)}
+.sC .k{font-size:10px;letter-spacing:.14em;color:#5C7A8A}
+.sC .t{font-size:16px;color:#9FE9D0}
+.sC .bot{display:grid;grid-template-columns:1fr 1fr;gap:6px 12px;font-size:11px;border-top:1px solid #22303C}
+.sC .bot span{color:#5C7A8A}
+.sC .bot b{font-weight:500;color:#D7E2EC}
+
+/* Draft 4: interaction */
+.modes{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:18px}
+.mode{display:grid;gap:10px;background:var(--bg2);border:1px solid var(--line);border-radius:12px;padding:16px}
+.mode p{font-size:15px;color:var(--ink2)}
+.mode .pro{font-size:14px;color:var(--ink2);display:grid;gap:4px;padding-left:0;list-style:none;margin:0}
+.mode .pro li::before{content:"+ ";color:var(--accent);font-family:var(--mono)}
+.mode .pro li.con::before{content:"– ";color:var(--ink3)}
+.mode .glyph{height:54px;display:flex;align-items:center;gap:8px}
+.glyph .bar{flex:1;height:6px;border-radius:3px;background:var(--line);position:relative}
+.glyph .bar i{position:absolute;top:-5px;width:16px;height:16px;border-radius:50%;background:var(--accent)}
+.glyph .dot{width:7px;height:7px;border-radius:50%;background:var(--ink3)}
+.glyph .scroll{width:26px;height:44px;border:2px solid var(--ink3);border-radius:13px;position:relative}
+.glyph .scroll::after{content:"";position:absolute;left:9px;top:8px;width:4px;height:10px;border-radius:2px;background:var(--accent)}
+.glyph .lines{flex:1;display:grid;gap:5px}
+.glyph .lines i{height:5px;border-radius:3px;background:var(--line)}
+.glyph .lines i:nth-child(2){background:var(--accent);opacity:.6}
+.glyph .pinch{flex:1;height:40px;border:1px dashed var(--ink3);border-radius:8px;position:relative}
+.glyph .pinch::before,.glyph .pinch::after{content:"";position:absolute;width:10px;height:10px;border-radius:50%;background:var(--accent);top:14px}
+.glyph .pinch::before{left:22%}.glyph .pinch::after{right:22%}
+
+/* Questions */
+.qs{display:grid;gap:12px;counter-reset:q}
+.q{display:grid;grid-template-columns:32px 1fr;gap:10px;padding:14px 0;border-top:1px solid var(--line)}
+.q:last-child{border-bottom:1px solid var(--line)}
+.q::before{counter-increment:q;content:counter(q);font-family:var(--mono);color:var(--ink3);font-size:14px;padding-top:3px}
+.q b{display:block;font-weight:600}
+.q p{font-size:15px;color:var(--ink2)}
+@media (prefers-reduced-motion: reduce){*{animation:none!important;transition:none!important}}
+</style>
+
+<main>
+<header>
+  <div class="eyebrow">Draft board · for review, not the build</div>
+  <h1>How a rainbow forms, from orbit to wavefront</h1>
+  <div class="spectrum-rule"></div>
+  <p class="lede">Four drafts to react to before I build anything real: a working physics prototype of the droplet stage, the five scales the zoom will pass through, three visual directions, and three ways the user might drive the zoom.</p>
+</header>
+
+<!-- ===== Draft 1 ===== -->
+<section>
+  <div class="sec-head">
+    <div class="eyebrow">Draft 1 · live prototype</div>
+    <h2>The droplet, traced for real</h2>
+    <p>This is the physics core the whole piece hangs on, so I built it first. Sunlight enters from the left. Each ray refracts in, reflects off the back of the drop, and refracts out. The refractive index of water depends on wavelength, so the exit angle depends on colour. Drag the wavelength and watch the exit angle move. The bold ray is the one at the caustic, the “rainbow ray”, where the exit angle peaks.</p>
+  </div>
+  <div class="lab">
+    <div class="stage"><canvas id="hero"></canvas></div>
+    <div class="controls">
+      <div class="ctl">
+        <label for="lam"><span>Wavelength</span><b id="lamv">580 nm</b></label>
+        <div class="lam"></div>
+        <input id="lam" type="range" min="380" max="700" value="580" step="1" aria-label="Wavelength in nanometres">
+      </div>
+      <div class="ctl">
+        <label><span>Show</span></label>
+        <div class="seg" role="group" aria-label="Colour mode">
+          <button id="mOne" aria-pressed="true">One colour</button>
+          <button id="mAll" aria-pressed="false">Full spectrum</button>
+        </div>
+      </div>
+      <div class="ctl">
+        <label><span>Internal reflections</span></label>
+        <div class="seg" role="group" aria-label="Bounce count">
+          <button id="b1" aria-pressed="true">1 · primary bow</button>
+          <button id="b2" aria-pressed="false">2 · secondary</button>
+        </div>
+      </div>
+      <div class="readouts">
+        <div><small>n (water)</small><span id="nv">1.3330</span></div>
+        <div><small>Bow angle</small><span id="av">42.0°</span></div>
+      </div>
+      <div class="ctl">
+        <label><span>Bow angle across the spectrum</span></label>
+        <div class="disp"><canvas id="disp"></canvas></div>
+      </div>
+      <p class="note">Index from a Cauchy fit for water at 20 °C. Red exits near 42.4°, violet near 40.6°, which is why red sits on the outside of the primary bow and the order flips in the secondary.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ===== Draft 2 ===== -->
+<section>
+  <div class="sec-head">
+    <div class="eyebrow">Draft 2 · the zoom path</div>
+    <h2>Five scales, one continuous descent</h2>
+    <p>The zoom needs anchor points where the picture is stable and the caption can land. These are the five I propose, spanning roughly 14 orders of magnitude. Between anchors the camera moves continuously and the previous scale's picture shrinks into a detail of the next.</p>
+  </div>
+  <div class="ladder">
+    <div class="rung"><div class="pic"><canvas data-stage="planet"></canvas></div><div class="scale">10<sup>8</sup> m · orbit</div><h3>Sun, Earth, shadow</h3><p>Sunlight arrives as parallel rays. A rainbow is always centred on the antisolar point: the direction of your own shadow.</p></div>
+    <div class="rung"><div class="pic"><canvas data-stage="landscape"></canvas></div><div class="scale">10<sup>2</sup> m · landscape</div><h3>Observer and rain</h3><p>Sun behind you, rain ahead. The bow is a 42° cone around the shadow line. Low sun means a tall arc.</p></div>
+    <div class="rung"><div class="pic"><canvas data-stage="curtain"></canvas></div><div class="scale">10<sup>0</sup> m · rain curtain</div><h3>Which drops light up</h3><p>Every drop sends colour in every direction, but only the drops on the 42° cone send it to your eye. The bow is a selection, not a thing.</p></div>
+    <div class="rung"><div class="pic"><canvas data-stage="droplet"></canvas></div><div class="scale">10<sup>-3</sup> m · droplet</div><h3>Inside one drop</h3><p>Refract, reflect, refract. The exit angle piles up near 42°, and each colour piles up at its own angle.</p></div>
+    <div class="rung"><div class="pic"><canvas data-stage="wave"></canvas></div><div class="scale">10<sup>-7</sup> m · wavefront</div><h3>Why colour bends differently</h3><p>Light slows in water. Wavefronts crowd together and pivot. Shorter wavelengths slow more, so blue pivots further than red.</p></div>
+  </div>
+  <div class="ladder-bar"><div class="track"></div><div class="ticks"><span>10⁸ m</span><span>10²</span><span>10⁰</span><span>10⁻³</span><span>10⁻⁷ m</span></div></div>
+</section>
+
+<!-- ===== Draft 3 ===== -->
+<section>
+  <div class="sec-head">
+    <div class="eyebrow">Draft 3 · visual direction</div>
+    <h2>Three looks for the same stage</h2>
+    <p>Each phone shows the droplet stage in a different identity. The physics is identical. What changes is the ground, the type, the line quality, and how much the interface talks.</p>
+  </div>
+  <div class="dirs">
+    <div class="dir">
+      <h3>Nightfall <span class="tag">A</span></h3>
+      <div class="phone"><div class="screen sA">
+        <div class="top"><span class="k">Stage 4 of 5 · droplet</span><span class="t">One drop, one bend</span></div>
+        <div class="stg"><canvas data-mock="A"></canvas></div>
+        <div class="bot"><div class="pill"><i></i><i></i><i></i><i class="on"></i><i></i></div></div>
+      </div></div>
+      <p>Cinematic and quiet. Near-black sky, light rendered as glow, the spectrum is the only colour on screen. Captions are short and fade in with the camera. Feels like a planetarium show.</p>
+    </div>
+    <div class="dir">
+      <h3>Field Notebook <span class="tag">B</span></h3>
+      <div class="phone"><div class="screen sB">
+        <div class="top"><span class="k">Fig. 4 · the droplet</span><span class="t">Refract, reflect, refract</span></div>
+        <div class="stg"><canvas data-mock="B"></canvas></div>
+        <div class="bot"><span>Index at 580 nm <b>1.3330</b> · bow angle <b>42.0°</b></span></div>
+      </div></div>
+      <p>Pale paper, pen-weight lines, labelled like a good textbook figure. Warm and explanatory. Colour is used sparingly so the spectrum reads as the point of the diagram.</p>
+    </div>
+    <div class="dir">
+      <h3>Instrument <span class="tag">C</span></h3>
+      <div class="phone"><div class="screen sC">
+        <div class="top"><span class="k">SCALE 1E-3 M · DROPLET</span><span class="t">λ = 580 nm</span></div>
+        <div class="stg"><canvas data-mock="C"></canvas></div>
+        <div class="bot"><span>n</span><b>1.3330</b><span>θ bow</span><b>42.04°</b><span>i crit</span><b>59.4°</b><span>r</span><b>40.2°</b></div>
+      </div></div>
+      <p>A simulator. Grid, readouts, sliders always visible. Invites you to poke at every parameter: wavelength, drop size, sun elevation. Less story, more lab bench.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ===== Draft 4 ===== -->
+<section>
+  <div class="sec-head">
+    <div class="eyebrow">Draft 4 · how the zoom is driven</div>
+    <h2>Three ways to move through the scales</h2>
+    <p>This decision shapes everything else, especially on mobile, so I want to settle it before building the camera.</p>
+  </div>
+  <div class="modes">
+    <div class="mode">
+      <div class="glyph"><div class="scroll"></div><div class="lines"><i></i><i></i><i></i><i></i></div></div>
+      <h3>Scroll-driven</h3>
+      <p>The page scrolls, the camera descends. Captions are pinned in the flow. The most familiar pattern for a mobile reader.</p>
+      <ul class="pro"><li>Zero learning curve; works one-handed</li><li>Easy to add prose between stages</li><li class="con">Harder to “play” at a stage; scrubbing is coarse</li></ul>
+    </div>
+    <div class="mode">
+      <div class="glyph"><div class="dot"></div><div class="bar"><i style="left:58%"></i></div><div class="dot"></div></div>
+      <h3>Altitude scrubber</h3>
+      <p>One big slider from orbit to wavefront, with soft snapping at the five anchors. Fixed viewport, full-screen canvas, controls in a drawer.</p>
+      <ul class="pro"><li>Feels like an instrument; precise scrubbing</li><li>Room for per-stage controls (wavelength, sun angle)</li><li class="con">Long prose has nowhere to live</li></ul>
+    </div>
+    <div class="mode">
+      <div class="glyph"><div class="pinch"></div></div>
+      <h3>Free zoom + rail</h3>
+      <p>Pinch or wheel to zoom anywhere, with a side rail of stage buttons that fly the camera to an anchor.</p>
+      <ul class="pro"><li>Most exploratory; feels like a map</li><li class="con">Easy to get lost between anchors</li><li class="con">Hardest to make smooth on low-end phones</li></ul>
+    </div>
+  </div>
+</section>
+
+<!-- ===== Questions ===== -->
+<section>
+  <div class="sec-head">
+    <div class="eyebrow">What I need from you</div>
+    <h2>Open questions</h2>
+  </div>
+  <div class="qs">
+    <div class="q"><div><b>Who is it for?</b><p>A curious adult, a high-school physics class, a museum kiosk, or a portfolio piece? This sets how much the captions explain and whether readouts like the refractive index are shown or hidden.</p></div></div>
+    <div class="q"><div><b>Which visual direction, or a blend?</b><p>Nightfall, Field Notebook, Instrument. I have a favourite for the zoom itself (A) but the droplet and wavefront stages could borrow B's labelling.</p></div></div>
+    <div class="q"><div><b>Which driving model?</b><p>Scroll-driven, altitude scrubber, or free zoom. My recommendation is the scrubber with scroll as a fallback on very tall content, but scroll-driven is the safer mobile bet.</p></div></div>
+    <div class="q"><div><b>How deep on the wave picture?</b><p>Rays only, wavefronts pivoting at the interface, or a real wave simulation showing phase velocity change? The last is the most beautiful and the most expensive.</p></div></div>
+    <div class="q"><div><b>Which extras earn a place?</b><p>Secondary bow and Alexander's dark band. Supernumerary fringes. Drop-size effects. Sun elevation and the arc's height. Polarisation. Each is a stage or a control; I'd cut most for v1.</p></div></div>
+    <div class="q"><div><b>Tech constraints?</b><p>Plain HTML + Canvas keeps it small and fast on phones. WebGL buys glow and the wave sim. Any framework preference, hosting target, or bundle budget?</p></div></div>
+    <div class="q"><div><b>Sound, and how much motion?</b><p>An ambient bed can sell the descent but many people mute. And should the zoom ever auto-play, or only move on input?</p></div></div>
+  </div>
+</section>
+</main>
+
+<script>
+(() => {
+// ---------- physics ----------
+const nWater = l => 1.3199 + 6878/(l*l) - 1.132e9/(l**4) + 1.11e14/(l**6);
+function wlColor(l){
+  let r=0,g=0,b=0;
+  if(l<440){r=-(l-440)/60;b=1}
+  else if(l<490){g=(l-440)/50;b=1}
+  else if(l<510){g=1;b=-(l-510)/20}
+  else if(l<580){r=(l-510)/70;g=1}
+  else if(l<645){r=1;g=-(l-645)/65}
+  else{r=1}
+  let f=1; if(l<420)f=.3+.7*(l-380)/40; else if(l>700)f=.3+.7*(780-l)/80;
+  const gm=v=>Math.round(255*Math.pow(v*f,.8));
+  return [gm(r),gm(g),gm(b)];
+}
+const rgb=(c,a=1)=>`rgba(${c[0]},${c[1]},${c[2]},${a})`;
+const refract=(I,N,eta)=>{const c=-(I[0]*N[0]+I[1]*N[1]);const k=1-eta*eta*(1-c*c);if(k<0)return null;const a=eta*c-Math.sqrt(k);return[eta*I[0]+a*N[0],eta*I[1]+a*N[1]]};
+const reflect=(I,N)=>{const d=2*(I[0]*N[0]+I[1]*N[1]);return[I[0]-d*N[0],I[1]-d*N[1]]};
+const hit=(p,d)=>{const t=-2*(p[0]*d[0]+p[1]*d[1]);return[p[0]+d[0]*t,p[1]+d[1]*t]};
+function trace(b,n,k){
+  const q1=[-Math.sqrt(1-b*b),b]; const pts=[[-4,b],q1];
+  let d=refract([1,0],q1,1/n), q=q1;
+  for(let i=0;i<k;i++){q=hit(q,d);pts.push(q);d=reflect(d,q)}
+  q=hit(q,d);pts.push(q);d=refract(d,[-q[0],-q[1]],n)||d;
+  pts.push([q[0]+d[0]*5,q[1]+d[1]*5]);
+  return {pts,dir:d};
+}
+const bowB=(n,k)=>Math.sqrt(1-(n*n-1)/(k*(k+2)));      // impact parameter of the caustic ray
+const bowAngle=(n,k)=>{const b=bowB(n,k),i=Math.asin(b),r=Math.asin(b/n);const D=(180*(k)+2*i*180/Math.PI-2*(k+1)*r*180/Math.PI); return k===1?180-D: D-180;}; // deg from antisolar
+
+// ---------- canvas helpers ----------
+function fit(c){const dpr=Math.min(2,window.devicePixelRatio||1);const w=c.clientWidth,h=c.clientHeight;if(!w||!h)return null;c.width=Math.round(w*dpr);c.height=Math.round(h*dpr);const g=c.getContext('2d');g.setTransform(dpr,0,0,dpr,0,0);return {g,w,h}}
+function poly(g,pts,cx,cy,R){g.beginPath();pts.forEach((p,i)=>{const x=cx+p[0]*R,y=cy-p[1]*R;i?g.lineTo(x,y):g.moveTo(x,y)});g.stroke()}
+
+// ---------- droplet renderer (shared by hero + mocks) ----------
+function drawDroplet(c,o){
+  const f=fit(c);if(!f)return;const {g,w,h}=f;
+  g.fillStyle=o.bg;g.fillRect(0,0,w,h);
+  if(o.grid){g.strokeStyle=o.gridColor;g.lineWidth=1;for(let x=0;x<w;x+=24){g.beginPath();g.moveTo(x,0);g.lineTo(x,h);g.stroke()}for(let y=0;y<h;y+=24){g.beginPath();g.moveTo(0,y);g.lineTo(w,y);g.stroke()}}
+  const R=Math.min(w,h)*(o.radius||0.3), cx=w*(o.cx||0.62), cy=h*0.5;
+  // drop
+  g.beginPath();g.arc(cx,cy,R,0,Math.PI*2);
+  if(o.dropFill){g.fillStyle=o.dropFill;g.fill()}
+  g.strokeStyle=o.dropStroke;g.lineWidth=o.dropWidth||1.5;g.stroke();
+  if(o.hatch){g.save();g.clip();g.strokeStyle=o.hatch;g.lineWidth=1;for(let i=-R*2;i<R*2;i+=7){g.beginPath();g.moveTo(cx+i,cy-R);g.lineTo(cx+i+R,cy+R);g.stroke()}g.restore()}
+  g.lineCap='round';g.lineJoin='round';
+  const k=o.bounces||1, lam=o.lambda||580;
+  // faint fan of incoming rays at one colour
+  if(o.fan!==false){const n=nWater(lam),col=wlColor(lam);g.lineWidth=1;g.strokeStyle=rgb(col,o.fanAlpha||0.22);
+    for(let i=1;i<=8;i++){const b=i/9*0.98;poly(g,trace(b,n,k).pts,cx,cy,R)}}
+  // caustic rays
+  const lams=o.all?[400,430,460,490,520,550,580,610,640,670,700]:[lam];
+  lams.forEach(L=>{const n=nWater(L),col=wlColor(L),t=trace(bowB(n,k),n,k);
+    if(o.glow){g.save();g.shadowColor=rgb(col,.9);g.shadowBlur=14;g.strokeStyle=rgb(col,.95);g.lineWidth=o.all?1.6:2.4;poly(g,t.pts,cx,cy,R);g.restore()}
+    else{g.strokeStyle=rgb(col,o.all?.9:1);g.lineWidth=o.all?1.5:2.2;poly(g,t.pts,cx,cy,R)}});
+  // antisolar reference + angle arc for single colour
+  if(!o.all && o.arc){const n=nWater(lam),t=trace(bowB(n,k),n,k),ex=t.pts[t.pts.length-2],ang=Math.atan2(t.dir[1],t.dir[0]);
+    const ox=cx+ex[0]*R,oy=cy-ex[1]*R;g.setLineDash([4,5]);g.strokeStyle=o.ink;g.lineWidth=1;g.beginPath();g.moveTo(ox,oy);g.lineTo(ox-R*1.6,oy);g.stroke();g.setLineDash([]);
+    const ca=Math.atan2(-t.dir[1],t.dir[0]),ar=R*0.55;g.beginPath();if(k===1)g.arc(ox,oy,ar,ca,Math.PI);else g.arc(ox,oy,ar,Math.PI,ca);g.stroke();
+    g.fillStyle=o.ink;g.font=`${o.labelFont||'12px '+getComputedStyle(document.body).getPropertyValue('--mono')}`;g.textAlign='right';
+    const a=k===1?180-Math.abs(ang*180/Math.PI):Math.abs(ang*180/Math.PI)-180;g.fillText(a.toFixed(1)+'°',ox-ar-6,oy+(k===1?14:-8));}
+  if(o.labels){g.fillStyle=o.ink;g.font=o.labelFont;g.textAlign='left';g.fillText('sunlight',12,cy-R*0.9-6);g.textAlign='center';g.fillText('water drop',cx,cy+R+18)}
+}
+
+// ---------- stage sketches ----------
+const sky='#070A14';
+const spectrumStroke=(g,x0,y0,x1,y1)=>{const gr=g.createLinearGradient(x0,y0,x1,y1);[['#e8202b',0],['#ff7a1a',.2],['#f2d41d',.4],['#3ccf5a',.6],['#3b5bff',.8],['#7b2cff',1]].forEach(s=>gr.addColorStop(s[1],s[0]));return gr};
+const sketches={
+  planet(c){const f=fit(c);if(!f)return;const{g,w,h}=f;g.fillStyle=sky;g.fillRect(0,0,w,h);
+    for(let i=0;i<40;i++){g.fillStyle=`rgba(255,255,255,${.15+Math.random()*.5})`;g.fillRect(Math.random()*w,Math.random()*h,1,1)}
+    const sr=h*.55;g.save();g.shadowColor='#ffd166';g.shadowBlur=30;g.fillStyle='#ffd166';g.beginPath();g.arc(-sr*.35,h/2,sr,0,7);g.fill();g.restore();
+    g.strokeStyle='rgba(255,209,102,.35)';g.lineWidth=1;for(let i=0;i<7;i++){const y=h*.2+i*h*.1;g.beginPath();g.moveTo(sr*.6,y);g.lineTo(w*.7,y);g.stroke()}
+    const er=h*.18,ex=w*.72,ey=h/2;g.fillStyle='#2b6fd6';g.beginPath();g.arc(ex,ey,er,0,7);g.fill();
+    g.fillStyle='rgba(0,0,0,.6)';g.beginPath();g.arc(ex,ey,er,-Math.PI/2,Math.PI/2);g.fill();
+    g.strokeStyle='rgba(255,255,255,.35)';g.setLineDash([3,4]);g.beginPath();g.moveTo(ex-er*1.2,ey);g.lineTo(w,ey);g.stroke();g.setLineDash([]);
+    g.fillStyle='#fff';g.beginPath();g.arc(ex-er*.02,ey-er*.5,2,0,7);g.fill();},
+  landscape(c){const f=fit(c);if(!f)return;const{g,w,h}=f;const sk=g.createLinearGradient(0,0,0,h);sk.addColorStop(0,'#101a33');sk.addColorStop(1,'#3a4a6a');g.fillStyle=sk;g.fillRect(0,0,w,h);
+    g.fillStyle='#1f2a1f';g.fillRect(0,h*.78,w,h);
+    g.fillStyle='#ffd166';g.beginPath();g.arc(w*.08,h*.62,9,0,7);g.fill();
+    const ox=w*.32,oy=h*.78;g.strokeStyle='#eee';g.lineWidth=2;g.beginPath();g.moveTo(ox,oy);g.lineTo(ox,oy-16);g.stroke();g.beginPath();g.arc(ox,oy-20,3,0,7);g.stroke();
+    g.setLineDash([3,4]);g.strokeStyle='rgba(255,255,255,.4)';g.lineWidth=1;g.beginPath();g.moveTo(w*.08,h*.62);g.lineTo(w,h*.92);g.stroke();g.setLineDash([]);
+    // rain
+    g.strokeStyle='rgba(160,190,230,.35)';for(let i=0;i<60;i++){const x=w*.55+Math.random()*w*.45,y=Math.random()*h*.78;g.beginPath();g.moveTo(x,y);g.lineTo(x-2,y+8);g.stroke()}
+    // bow: arc centred on antisolar point below horizon
+    const ax=w*.9,ay=h*1.05,r=h*.62;for(let i=0;i<6;i++){g.strokeStyle=['#7b2cff','#3b5bff','#3ccf5a','#f2d41d','#ff7a1a','#e8202b'][i];g.lineWidth=2.2;g.beginPath();g.arc(ax,ay,r+i*2.4,Math.PI*1.02,Math.PI*1.72);g.stroke()}
+    g.strokeStyle='rgba(255,255,255,.5)';g.lineWidth=1;g.beginPath();g.moveTo(ox,oy-18);g.lineTo(ax-r*.72,ay-r*.72);g.stroke();g.fillStyle='#fff';g.font='10px JetBrains Mono, monospace';g.fillText('42°',ox+18,oy-30)},
+  curtain(c){const f=fit(c);if(!f)return;const{g,w,h}=f;g.fillStyle=sky;g.fillRect(0,0,w,h);
+    const ox=w*.06,oy=h*.94;let s=7;const rnd=()=>{s=(s*16807)%2147483647;return s/2147483647};
+    for(let i=0;i<260;i++){const x=w*.15+rnd()*w*.85,y=rnd()*h*.85;const ang=Math.atan2(oy-y,x-ox)*180/Math.PI;const d=ang-42;
+      if(Math.abs(d)<2.2){const L=700-(d+2.2)/4.4*320;const col=wlColor(L);g.fillStyle=rgb(col,1);g.beginPath();g.arc(x,y,2.4,0,7);g.fill()}
+      else{g.fillStyle='rgba(150,170,210,.35)';g.beginPath();g.arc(x,y,1.3,0,7);g.fill()}}
+    g.fillStyle='#fff';g.beginPath();g.arc(ox,oy,3,0,7);g.fill();g.setLineDash([3,4]);g.strokeStyle='rgba(255,255,255,.35)';g.beginPath();g.moveTo(ox,oy);g.lineTo(w,oy);g.stroke();g.setLineDash([])},
+  droplet(c){drawDroplet(c,{bg:sky,dropStroke:'rgba(180,200,240,.6)',dropFill:'rgba(80,120,200,.10)',all:true,glow:true,fanAlpha:.12,ink:'#fff',cx:.6,radius:.32})},
+  wave(c){const f=fit(c);if(!f)return;const{g,w,h}=f;g.fillStyle=sky;g.fillRect(0,0,w,h);
+    const iy=h*.5;g.fillStyle='rgba(80,120,200,.12)';g.fillRect(0,iy,w,h);g.strokeStyle='rgba(180,200,240,.6)';g.beginPath();g.moveTo(0,iy);g.lineTo(w,iy);g.stroke();
+    const draw=(L,nn,off)=>{const col=wlColor(L);const th=-35*Math.PI/180;const sp=L/700*14;
+      const sr=Math.asin(Math.sin(35*Math.PI/180)/nn),thr=-sr;const spr=sp/nn;
+      g.strokeStyle=rgb(col,.85);g.lineWidth=1.4;
+      for(let i=-30;i<30;i++){ // incident crests above interface
+        const x0=w*.45+off+i*sp/Math.cos(th);g.beginPath();g.moveTo(x0,iy);g.lineTo(x0+Math.tan(th)*-iy*-1,0);g.stroke();}
+      for(let i=-30;i<30;i++){const x0=w*.45+off+i*spr/Math.cos(thr);g.beginPath();g.moveTo(x0,iy);g.lineTo(x0-Math.tan(thr)*(h-iy),h);g.stroke();}};
+    g.save();g.beginPath();g.rect(0,0,w/2,h);g.clip();draw(650,1.331,0);g.restore();
+    g.save();g.beginPath();g.rect(w/2,0,w/2,h);g.clip();draw(430,1.344,0);g.restore();
+    g.fillStyle='#fff';g.font='10px JetBrains Mono, monospace';g.fillText('air',6,iy-6);g.fillText('water',6,iy+14)}
+};
+
+// ---------- hero wiring ----------
+const st={lam:580,all:false,k:1};
+const hero=document.getElementById('hero'),disp=document.getElementById('disp');
+function drawDisp(){const f=fit(disp);if(!f)return;const{g,w,h}=f;g.clearRect(0,0,w,h);
+  const A=[];for(let L=380;L<=700;L+=4)A.push([L,bowAngle(nWater(L),st.k)]);const lo=Math.min(...A.map(a=>a[1])),hi=Math.max(...A.map(a=>a[1]));
+  const X=L=>(L-380)/320*(w-16)+8,Y=a=>h-8-(a-lo)/(hi-lo)*(h-22);
+  A.forEach((a,i)=>{if(!i)return;g.strokeStyle=rgb(wlColor(a[0]));g.lineWidth=2.5;g.beginPath();g.moveTo(X(A[i-1][0]),Y(A[i-1][1]));g.lineTo(X(a[0]),Y(a[1]));g.stroke()});
+  g.fillStyle=getComputedStyle(document.body).getPropertyValue('--ink3');g.font='10px JetBrains Mono, monospace';g.fillText(hi.toFixed(1)+'°',6,10);g.textAlign='right';g.fillText(lo.toFixed(1)+'°',w-6,h-3);
+  const cx=X(st.lam),cy=Y(bowAngle(nWater(st.lam),st.k));g.fillStyle='#fff';g.strokeStyle=rgb(wlColor(st.lam));g.lineWidth=2;g.beginPath();g.arc(cx,cy,4,0,7);g.fill();g.stroke()}
+function renderHero(){
+  drawDroplet(hero,{bg:sky,dropStroke:'rgba(180,200,240,.7)',dropFill:'rgba(80,120,200,.10)',all:st.all,lambda:st.lam,bounces:st.k,glow:true,arc:true,ink:'rgba(255,255,255,.8)',labels:true,labelFont:'12px JetBrains Mono, monospace',fanAlpha:.18});
+  const n=nWater(st.lam);document.getElementById('nv').textContent=n.toFixed(4);document.getElementById('av').textContent=bowAngle(n,st.k).toFixed(1)+'°';
+  document.getElementById('lamv').textContent=st.lam+' nm';drawDisp()}
+document.getElementById('lam').addEventListener('input',e=>{st.lam=+e.target.value;renderHero()});
+const press=(id,fn)=>document.getElementById(id).addEventListener('click',()=>{fn();['mOne','mAll'].forEach(i=>document.getElementById(i).setAttribute('aria-pressed',(i==='mAll')===st.all));['b1','b2'].forEach(i=>document.getElementById(i).setAttribute('aria-pressed',(i==='b2')===(st.k===2)));renderHero()});
+press('mOne',()=>st.all=false);press('mAll',()=>st.all=true);press('b1',()=>st.k=1);press('b2',()=>st.k=2);
+
+// ---------- mocks ----------
+function renderMocks(){
+  document.querySelectorAll('[data-mock]').forEach(c=>{const m=c.dataset.mock;
+    if(m==='A')drawDroplet(c,{bg:'#05070F',dropStroke:'rgba(160,180,230,.5)',dropFill:'rgba(80,120,200,.08)',all:true,glow:true,fanAlpha:.1,ink:'#fff',cx:.6,radius:.3});
+    if(m==='B')drawDroplet(c,{bg:'#EDF0EE',dropStroke:'#1E2A2A',dropWidth:1.2,hatch:'rgba(30,42,42,.12)',all:false,lambda:580,arc:true,ink:'#1E2A2A',labels:true,labelFont:'italic 12px Fraunces, Georgia, serif',fanAlpha:.35,cx:.6,radius:.3});
+    if(m==='C')drawDroplet(c,{bg:'#0F151C',grid:true,gridColor:'rgba(92,122,138,.15)',dropStroke:'#9FE9D0',dropWidth:1,all:false,lambda:580,arc:true,ink:'#9FE9D0',labelFont:'11px JetBrains Mono, monospace',fanAlpha:.3,cx:.6,radius:.3});
+  });
+}
+function renderAll(){renderHero();renderMocks();document.querySelectorAll('[data-stage]').forEach(c=>sketches[c.dataset.stage](c))}
+let t;window.addEventListener('resize',()=>{clearTimeout(t);t=setTimeout(renderAll,120)});
+if(document.fonts&&document.fonts.ready)document.fonts.ready.then(renderAll);renderAll();
+})();
+</script>
