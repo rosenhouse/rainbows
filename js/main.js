@@ -102,7 +102,7 @@ function render(time) {
   else if (f > 0.999) { STAGES[k + 1].draw(g, W, H, S, time); drewWave = k + 1 === 4; }
   else if (STAGES[k].ownTransition) {
     STAGES[k].draw(g, W, H, S, time, f);
-    const aIn = smooth((f - 0.62) / 0.38);
+    const [f0, f1] = STAGES[k].fadeIn || [0.62, 1], aIn = smooth((f - f0) / (f1 - f0));
     if (aIn > 0) { g.save(); g.globalAlpha = aIn; STAGES[k + 1].draw(g, W, H, S, time); g.restore(); }
   }
   else {

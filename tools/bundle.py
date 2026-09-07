@@ -17,8 +17,8 @@ def as_module_object(name, src):
     body = re.sub(r'^export ', '', src, flags=re.M)
     return f"const {name} = (() => {{\n{body}\nreturn {{ {', '.join(names)} }};\n}})();\n"
 
-js = [as_plain((root / 'js/physics.js').read_text()), as_plain((root / 'js/draw.js').read_text())]
-for st in ['sky', 'orbit', 'rain', 'drop', 'wave']:   # sky first: orbit uses its geometry
+js = [as_plain((root / 'js/physics.js').read_text()), as_plain((root / 'js/draw.js').read_text()), as_plain((root / 'js/scene3d.js').read_text())]
+for st in ['rain', 'sky', 'orbit', 'drop', 'wave']:   # order matters: sky uses rain's layout, orbit uses sky's geometry
     js.append(as_module_object(st, (root / f'js/stages/{st}.js').read_text()))
 js.append(strip_imports((root / 'js/main.js').read_text()))
 css = (root / 'css/app.css').read_text()

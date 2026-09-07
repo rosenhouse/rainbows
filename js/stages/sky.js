@@ -1,16 +1,20 @@
 import { nWater, wlColor, bowAngle, rgb } from '../physics.js';
-import { label, prng, INK2 } from '../draw.js';
+import { label, prng, INK2, smooth, lerp } from '../draw.js';
+import { v3, slerp, scene, camera, project, drawCone, drawAntisolar, drawSunlight, drawFigure, METRE } from '../scene3d.js';
+import * as rain from './rain.js';
 
 export const name = 'Sky';
 export const scaleM = 1e2;
 export const controls = ['sun'];
+export const ownTransition = true;
+export const fadeIn = [0.72, 1];
 export const caption = {
   title: 'Sun behind you, rain ahead',
   body: 'Stand with the Sun at your back. Your bow is a circle 42° wide, centred on the point opposite the Sun, and the circle never changes size. When the Sun is low that centre sits just below the horizon and you see a tall arc. Raise the Sun and the centre sinks, taking the bow down with it. From a plane you could see the whole circle.',
 };
 
 const rainSeed = prng(5);
-const rain = Array.from({ length: 110 }, () => ({ x: rainSeed(), y: rainSeed(), l: 0.6 + rainSeed() * 0.8 }));
+const streaks = Array.from({ length: 110 }, () => ({ x: rainSeed(), y: rainSeed(), l: 0.6 + rainSeed() * 0.8 }));
 
 // The camera stands just behind your head, looking level, away from the Sun. Everything in the
 // sky is placed by true perspective so it lands exactly on the orbit stage's 3D picture.
@@ -29,10 +33,8 @@ export function geo(S) {
   return { hy, F, cx, cy, project, cone, r: F * Math.tan(42 * Math.PI / 180), obs: { x: V.cx, y: hy + V.h * 0.3, h: V.h * 0.2 } };
 }
 
-export function box(W, H, S) {
-  const { project, cone, hy } = geo(S), q = project(cone(42 * Math.PI / 180, 78 * Math.PI / 180));
-  return { x: q.x, y: Math.min(q.y, hy - H * 0.05), w: W * 0.09 };
-}
+// The next move pivots around you, so the hint box sits on your head.
+export function box(W, H, S) { const { obs } = geo(S); return { x: obs.x, y: obs.y - obs.h * 0.85, w: W * 0.09 }; }
 
 // Trace one angular ring of the cone; returns the run of points above the horizon and below it.
 function ring(G, ang, n = 180) {
@@ -42,7 +44,50 @@ function ring(G, ang, n = 180) {
 }
 function stroke(g, pts) { if (pts.length < 2) return; g.beginPath(); pts.forEach((q, i) => i ? g.lineTo(q.x, q.y) : g.moveTo(q.x, q.y)); g.stroke(); }
 
-export function draw(g, W, H, S, t) {
+export function draw(g, W, H, S, time, f = 0) {
+  if (f <= 0) { draw2d(g, W, H, S, time); return; }
+  swing(g, W, H, S, f);
+  if (f < 0.15) { g.save(); g.globalAlpha = 1 - smooth(f / 0.15); draw2d(g, W, H, S, time); g.restore(); }
+}
+
+// The camera swings 90° around you: from just behind your head, looking away from the Sun, to
+// far off to your side, so the cone of colour is seen edge-on and your eye sits at its tip.
+function swing(g, W, H, S, f) {
+  const V = S.V, G = geo(S), sc = scene(S), { p, up, h, side } = sc, m = METRE, lay = rain.layout(S);
+  const cx = V.cx, cy = G.hy, t = smooth(f);
+  // Start: 6 m behind your head and 1.1 m above it, looking level. End: 200 m off to your side with a
+  // long lens (near enough to a plain side view), aimed so your eye lands where the rain stage draws it.
+  const F1 = G.F, D0 = 6 * m, D2 = 200 * m, F2 = lay.figH * 200 / 1.7;
+  const T0 = v3.add(p, v3.mul(up, 1.1 * m));
+  const T2 = v3.add(v3.sub(p, v3.mul(h, (lay.eye.x - cx) * D2 / F2)), v3.mul(up, (lay.eye.y - cy) * D2 / F2));
+  const target = v3.add(v3.mul(T0, 1 - t), v3.mul(T2, t));
+  const dir = slerp(v3.mul(h, -1), side, t), dist = Math.exp(lerp(Math.log(D0), Math.log(D2), t));
+  const C = camera(v3.add(target, v3.mul(dir, dist)), v3.mul(dir, -1), up, Math.exp(lerp(Math.log(F1), Math.log(F2), t)), cx, cy);
+
+  // sky, and ground that settles from the horizon down to your feet as the view goes side-on
+  const gy = lerp(cy, lay.ground, t);
+  let gr = g.createLinearGradient(0, 0, 0, gy);
+  gr.addColorStop(0, '#0A1230'); gr.addColorStop(0.75, '#26375F'); gr.addColorStop(1, '#4C4F6B');
+  g.fillStyle = gr; g.fillRect(0, 0, W, gy);
+  gr = g.createLinearGradient(0, gy, 0, H);
+  gr.addColorStop(0, '#1B2A24'); gr.addColorStop(1, '#0C1411');
+  g.fillStyle = gr; g.fillRect(0, gy, W, H - gy);
+
+  // sunlight: a sheaf of parallel rays around you, one of them reaching your eye
+  const pts = [];
+  for (let i = -3; i <= 4; i++) for (let j = -2; j <= 2; j++) if (i || j) pts.push(v3.add(v3.add(p, v3.mul(up, i * 2.2 * m)), v3.mul(side, j * 3 * m)));
+  drawSunlight(g, C, pts, 60 * m, 'rgba(255,215,140,.22)', 1);
+  drawSunlight(g, C, [p], 60 * m, 'rgba(255,225,160,.9)', 1.6);
+
+  drawAntisolar(g, C, sc, 40 * m);
+  drawCone(g, C, sc, 3, Math.min(C.F * 0.0035, F1 * 0.0035 * 1.6));
+  drawFigure(g, C, sc);
+
+  const head = project(C, p);
+  if (t > 0.5) label(g, 'your eye', head.x - lay.figH * 0.13 - 8, head.y, 'right', 'rgba(234,240,255,' + smooth((t - 0.5) / 0.3) + ')');
+}
+
+function draw2d(g, W, H, S, t) {
   const V = S.V, G = geo(S), { hy, F, cx, cy, r, obs } = G;
 
   // Storm sky, darkest opposite the Sun; a little warmth where the sun is (behind us, low)
@@ -56,7 +101,7 @@ export function draw(g, W, H, S, t) {
   // Rain in the middle distance, drifting down
   const drift = S.reduced ? 0 : t * 0.00025;
   g.strokeStyle = 'rgba(170,195,235,.16)'; g.lineWidth = 1;
-  for (const d of rain) {
+  for (const d of streaks) {
     const y = V.y0 + ((d.y + drift) % 1) * (hy - V.y0), x = d.x * W, l = 10 * d.l;
     g.beginPath(); g.moveTo(x, y); g.lineTo(x - 1, y + l); g.stroke();
   }

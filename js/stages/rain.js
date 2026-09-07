@@ -2,7 +2,7 @@ import { nWater, wlColor, bowAngle, bandWavelength, rgb } from '../physics.js';
 import { label, prng, glowPath, dashed, INK2 } from '../draw.js';
 
 export const name = 'Rain';
-export const scaleM = 1;
+export const scaleM = 10;
 export const controls = ['sun'];
 export const caption = {
   title: 'Every drop is a tiny rainbow-maker',
@@ -41,9 +41,14 @@ function fanSprite(sunDeg, L) {
   sprite = c; return sprite;
 }
 
+// Where you stand in the side view: head (your eye) at the lower left, feet on the ground line.
+export function layout(S) {
+  const V = S.V, figH = V.h * 0.16;
+  const eye = { x: V.x0 + V.w * 0.1, y: V.y1 - V.h * 0.16 };
+  return { eye, figH, ground: eye.y + figH * 0.87 };
+}
 function geo(S) {
-  const V = S.V;
-  const eye = { x: V.x0 + V.w * 0.1, y: V.y1 - V.h * 0.1 };
+  const V = S.V, { eye } = layout(S);
   const e = S.sun * Math.PI / 180, d = [Math.cos(e), Math.sin(e)];   // sunlight direction, y down
   const up = (42 - S.sun) * Math.PI / 180;                          // lit direction from the eye
   const lit = [Math.cos(up), -Math.sin(up)];
@@ -55,25 +60,33 @@ function geo(S) {
 export function box(W, H, S) { const { hero } = geo(S); return { x: hero.x, y: hero.y, w: W * 0.075 }; }
 
 export function draw(g, W, H, S) {
-  const V = S.V, { eye, d, lit, hero } = geo(S);
+  const V = S.V, { eye, d, lit, hero } = geo(S), { figH, ground } = layout(S);
   const L = Math.min(V.w, V.h) * 0.11, sp = fanSprite(S.sun, L);
   const drops = field.map(p => ({ x: V.x0 + p.x * V.w, y: V.y0 + p.y * (V.h * 0.85), fan: p.fan })).filter(p => p.y < eye.y - 12);
   drops.push({ ...hero, fan: true });
 
-  // ground line
-  g.strokeStyle = 'rgba(234,240,255,.18)'; g.lineWidth = 1;
-  g.beginPath(); g.moveTo(0, eye.y + 14); g.lineTo(W, eye.y + 14); g.stroke();
+  // the same storm sky and ground as the view from behind you
+  let gr = g.createLinearGradient(0, 0, 0, ground);
+  gr.addColorStop(0, '#0A1230'); gr.addColorStop(0.75, '#1B2846'); gr.addColorStop(1, '#2C3552');
+  g.fillStyle = gr; g.fillRect(0, 0, W, ground);
+  gr = g.createLinearGradient(0, ground, 0, H);
+  gr.addColorStop(0, '#1B2A24'); gr.addColorStop(1, '#0C1411');
+  g.fillStyle = gr; g.fillRect(0, ground, W, H - ground);
+  g.strokeStyle = 'rgba(234,240,255,.25)'; g.lineWidth = 1;
+  g.beginPath(); g.moveTo(0, ground); g.lineTo(W, ground); g.stroke();
 
-  // sunlight, faint, across the whole scene
-  g.strokeStyle = 'rgba(255,215,140,.10)';
-  for (let i = -6; i < 30; i++) {
-    const y0 = V.y0 - V.h * 0.2 + i * V.h * 0.06;
-    g.beginPath(); g.moveTo(-10, y0); g.lineTo(W + 10, y0 + (W + 20) * Math.tan(S.sun * Math.PI / 180)); g.stroke();
+  // sunlight: parallel rays sweeping across the whole scene
+  g.strokeStyle = 'rgba(255,215,140,.28)'; g.lineWidth = 1.2;
+  const tanE = Math.tan(S.sun * Math.PI / 180);
+  for (let i = -8; i < 40; i++) {
+    const y0 = V.y0 - V.h * 0.3 + i * V.h * 0.05;
+    g.beginPath(); g.moveTo(-10, y0); g.lineTo(W + 10, y0 + (W + 20) * tanE); g.stroke();
   }
+  label(g, 'sunlight', V.x0 + 14, V.y0 + 14 + (V.x0 + 14) * tanE, 'left', INK2);
 
   // opposite the Sun, from your eye
   dashed(g, eye.x, eye.y, eye.x + d[0] * W, eye.y + d[1] * W);
-  label(g, 'opposite the Sun', eye.x + 150, eye.y - 10 + d[1] * 150, 'left', INK2);
+  label(g, 'opposite the Sun', eye.x + 170, eye.y - 12 + d[1] * 170, 'left', INK2);
 
   // every drop makes colour; only some of it reaches you
   const aRed = bowAngle(nWater(700)), aVio = bowAngle(nWater(400)), mid = (aRed + aVio) / 2, half = Math.abs(aRed - aVio) / 2;
@@ -100,8 +113,14 @@ export function draw(g, W, H, S) {
   g.beginPath(); g.arc(eye.x, eye.y, 48, a1, a0); g.stroke();
   label(g, '42°', eye.x + 62, eye.y - 26, 'left');
 
-  // you
-  g.fillStyle = '#fff'; g.beginPath(); g.ellipse(eye.x, eye.y, 9, 5.5, 0, 0, 7); g.fill();
-  g.fillStyle = '#06080F'; g.beginPath(); g.arc(eye.x, eye.y, 3, 0, 7); g.fill();
-  label(g, 'your eye', eye.x, eye.y + 26, 'center');
+  // you, side on, your eye at the tip of the cone
+  const r = figH * 0.13;
+  g.fillStyle = '#06080F';
+  g.beginPath(); g.roundRect(eye.x - figH * 0.11, eye.y + r * 0.9, figH * 0.22, figH * 0.72, figH * 0.06); g.fill();
+  g.beginPath(); g.arc(eye.x, eye.y, r, 0, 7); g.fill();
+  g.strokeStyle = 'rgba(255,190,120,.55)'; g.lineWidth = 1.5;
+  g.beginPath(); g.moveTo(eye.x - figH * 0.11, eye.y + r * 0.9); g.lineTo(eye.x - figH * 0.11, eye.y + figH * 0.75); g.stroke();
+  g.beginPath(); g.arc(eye.x, eye.y, r, Math.PI * 0.7, Math.PI * 1.5); g.stroke();
+  g.fillStyle = '#fff'; g.beginPath(); g.arc(eye.x + r * 0.55, eye.y - r * 0.15, 2.2, 0, 7); g.fill();
+  label(g, 'your eye', eye.x - r - 8, eye.y, 'right');
 }
