@@ -3,7 +3,7 @@ import * as sky from './stages/sky.js';
 import * as rain from './stages/rain.js';
 import * as drop from './stages/drop.js';
 import * as wave from './stages/wave.js';
-import { smooth, clamp } from './draw.js';
+import { smooth, clamp, labels } from './draw.js';
 
 const STAGES = [orbit, sky, rain, drop, wave];
 const $ = id => document.getElementById(id);
@@ -60,7 +60,8 @@ function showStage(i) {
 
 // ----- scrubber -----
 function setZ(z) { S.z = clamp(z, 0, 4); }
-function snap() { const r = Math.round(S.z); if (Math.abs(S.z - r) < 0.22) S.target = r; }
+// Mid-transition frames are not meant to be looked at: always ease to the nearest stage.
+function snap() { S.target = Math.round(S.z); }
 let dragging = false;
 const zFromX = x => { const r = scrub.getBoundingClientRect(); return clamp((x - r.left) / r.width, 0, 1) * 4; };
 scrub.addEventListener('pointerdown', e => { dragging = true; S.playing = false; S.target = null; scrub.setPointerCapture(e.pointerId); setZ(zFromX(e.clientX)); e.preventDefault(); });
@@ -68,7 +69,7 @@ scrub.addEventListener('pointermove', e => { if (dragging) setZ(zFromX(e.clientX
 const endDrag = () => { if (!dragging) return; dragging = false; snap(); };
 scrub.addEventListener('pointerup', endDrag); scrub.addEventListener('pointercancel', endDrag);
 thumb.addEventListener('keydown', e => {
-  const r = Math.round(S.z); let handled = true;
+  const r = S.target ?? Math.round(S.z); let handled = true;
   if (e.key === 'ArrowRight' || e.key === 'ArrowUp') S.target = clamp(r + 1, 0, 4);
   else if (e.key === 'ArrowLeft' || e.key === 'ArrowDown') S.target = clamp(r - 1, 0, 4);
   else if (e.key === 'Home') S.target = 0; else if (e.key === 'End') S.target = 4;
@@ -111,12 +112,12 @@ function render(time) {
     const aOut = 1 - smooth((f - 0.45) / 0.45), aIn = smooth((f - 0.22) / 0.45);
     if (aOut > 0) {
       g.save(); g.globalAlpha = aOut; g.translate(P.x, P.y); g.scale(m, m); g.translate(-P.x, -P.y);
-      A.draw(g, W, H, S, time); g.restore();
+      labels.alpha = 1 - smooth(f / 0.3); A.draw(g, W, H, S, time); labels.alpha = 1; g.restore();
     }
     const m2 = m * w;
     g.save(); g.translate(P.x, P.y); g.scale(m2, m2); g.translate(-P.x, -P.y);
     g.beginPath(); g.rect(0, 0, W, H); g.clip();
-    if (aIn > 0) { g.globalAlpha = aIn; B.draw(g, W, H, S, time); drewWave = k + 1 === 4; }
+    if (aIn > 0) { g.globalAlpha = aIn; labels.alpha = smooth((f - 0.6) / 0.4); B.draw(g, W, H, S, time); labels.alpha = 1; drewWave = k + 1 === 4; }
     g.globalAlpha = 1 - smooth((f - 0.55) / 0.4);
     g.strokeStyle = 'rgba(234,240,255,.55)'; g.lineWidth = 1 / m2; g.strokeRect(0, 0, W, H);
     g.restore();
@@ -143,7 +144,7 @@ function frame(time) {
     if (Math.abs(S.target - S.z) < 0.0008) { S.z = S.target; S.target = null; }
   }
   const z = S.z, k = Math.min(3, Math.floor(z)), f = z - k;
-  showStage(Math.round(z));
+  showStage(k + (f > (STAGES[k].ownTransition ? 0.82 : 0.5) ? 1 : 0));   // caption follows the picture, not the halfway point
   thumb.style.left = (z / 4 * 100) + '%'; fill.style.width = (z / 4 * 100) + '%';
   thumb.setAttribute('aria-valuenow', z.toFixed(2));
   $('scale').textContent = fmtScale(Math.pow(10, Math.log10(STAGES[k].scaleM) * (1 - f) + Math.log10(STAGES[Math.min(4, k + 1)].scaleM) * f));

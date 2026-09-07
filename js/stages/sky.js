@@ -7,10 +7,10 @@ export const name = 'Sky';
 export const scaleM = 1e2;
 export const controls = ['sun'];
 export const ownTransition = true;
-export const fadeIn = [0.72, 1];
+export const fadeIn = [0.8, 1];
 export const caption = {
   title: 'Sun behind you, rain ahead',
-  body: 'Stand with the Sun at your back. Your bow is a circle 42° wide, centred on the point opposite the Sun, and the circle never changes size. When the Sun is low that centre sits just below the horizon and you see a tall arc. Raise the Sun and the centre sinks, taking the bow down with it. From a plane you could see the whole circle.',
+  body: 'Stand with the Sun at your back. Your bow is a circle centred on the point opposite the Sun, its rim always 42° from that centre, and it never changes size. When the Sun is low the centre sits just below the horizon and you see a tall arc. Raise the Sun and the centre sinks, taking the bow down with it. From a plane you could see the whole circle.',
 };
 
 const rainSeed = prng(5);
@@ -54,7 +54,7 @@ export function draw(g, W, H, S, time, f = 0) {
 // far off to your side, so the cone of colour is seen edge-on and your eye sits at its tip.
 function swing(g, W, H, S, f) {
   const V = S.V, G = geo(S), sc = scene(S), { p, up, h, side } = sc, m = METRE, lay = rain.layout(S);
-  const cx = V.cx, cy = G.hy, t = smooth(f);
+  const cx = V.cx, cy = G.hy, t = smooth(Math.min(1, f / 0.78));   // the move finishes before the rain stage fades in
   // Start: 6 m behind your head and 1.1 m above it, looking level. End: 200 m off to your side with a
   // long lens (near enough to a plain side view), aimed so your eye lands where the rain stage draws it.
   const F1 = G.F, D0 = 6 * m, D2 = 200 * m, F2 = lay.figH * 200 / 1.7;
@@ -75,7 +75,7 @@ function swing(g, W, H, S, f) {
 
   // sunlight: a sheaf of parallel rays around you, one of them reaching your eye
   const pts = [];
-  for (let i = -3; i <= 4; i++) for (let j = -2; j <= 2; j++) if (i || j) pts.push(v3.add(v3.add(p, v3.mul(up, i * 2.2 * m)), v3.mul(side, j * 3 * m)));
+  for (let i = 1; i <= 5; i++) for (let j = -2; j <= 2; j++) pts.push(v3.add(v3.add(p, v3.mul(up, i * 2.2 * m)), v3.mul(side, j * 3 * m)));   // above your head only: light stops at the ground
   drawSunlight(g, C, pts, 60 * m, 'rgba(255,215,140,.22)', 1);
   drawSunlight(g, C, [p], 60 * m, 'rgba(255,225,160,.9)', 1.6);
 
@@ -83,8 +83,6 @@ function swing(g, W, H, S, f) {
   drawCone(g, C, sc, 3, Math.min(C.F * 0.0035, F1 * 0.0035 * 1.6));
   drawFigure(g, C, sc);
 
-  const head = project(C, p);
-  if (t > 0.5) label(g, 'your eye', head.x - lay.figH * 0.13 - 8, head.y, 'right', 'rgba(234,240,255,' + smooth((t - 0.5) / 0.3) + ')');
 }
 
 function draw2d(g, W, H, S, t) {
@@ -120,21 +118,23 @@ function draw2d(g, W, H, S, t) {
   g.restore();
 
   // Your shadow runs toward the point opposite the Sun
-  const k = 1 / (1 + 4 * Math.tan(S.sun * Math.PI / 180)), tip = { x: obs.x + (cx - obs.x) * k, y: obs.y + (cy - obs.y) * k };
+  // The camera is 6 m behind you and 2.8 m above the ground; your shadow runs away from it along
+  // the ground, 1.7 m / tan(sun height) long, so it shortens toward the horizon as the Sun rises.
+  const camH = 2.8, camD = 6, shadowLen = Math.min(400, 1.7 / Math.max(0.02, Math.tan(S.sun * Math.PI / 180)));
+  const tipY = hy + F * camH / (camD + shadowLen), tipW = obs.h * 0.2 * camD / (camD + shadowLen);
   g.fillStyle = 'rgba(0,0,0,.35)';
   g.beginPath(); g.moveTo(obs.x - obs.h * 0.2, obs.y); g.lineTo(obs.x + obs.h * 0.2, obs.y);
-  g.lineTo(tip.x + 3, tip.y); g.lineTo(tip.x - 3, tip.y); g.closePath(); g.fill();
+  g.lineTo(obs.x + tipW, tipY); g.lineTo(obs.x - tipW, tipY); g.closePath(); g.fill();
 
   // The rest of the circle, hidden below the horizon, so it is clear the bow sinks rather than shrinks
   g.save(); g.beginPath(); g.rect(0, hy, W, H - hy); g.clip();
   g.setLineDash([3, 7]); g.strokeStyle = 'rgba(234,240,255,.28)'; g.lineWidth = 1.2;
   stroke(g, ring(G, 42 * Math.PI / 180).below); g.setLineDash([]);
-  g.strokeStyle = 'rgba(234,240,255,.6)'; g.beginPath(); g.moveTo(cx - 6, cy); g.lineTo(cx + 6, cy); g.moveTo(cx, cy - 6); g.lineTo(cx, cy + 6); g.stroke();
   g.restore();
-  if (cy > hy + 8) label(g, 'centre of the bow, ' + Math.round(S.sun) + '° below the horizon', cx, Math.min(cy, V.y1 - 40) + 18, 'center', INK2);
+
 
   // A rear-view mirror: the one place in this picture you can see the Sun behind you
-  const mw = Math.min(V.w * 0.36, 230), mh = mw * 0.4, mx = V.x1 - mw - 6, my = V.y0 + 26;
+  const mw = Math.min(V.w * (V.w < 600 ? 0.28 : 0.36), 230), mh = mw * 0.4, mx = V.x1 - mw - 6, my = V.y0 + 26;
   g.strokeStyle = 'rgba(234,240,255,.35)'; g.lineWidth = 3; g.beginPath(); g.moveTo(mx + mw / 2, V.y0 - 40); g.lineTo(mx + mw / 2, my); g.stroke();
   g.save(); g.beginPath(); g.roundRect(mx, my, mw, mh, 8); g.clip();
   const mhy = my + mh * 0.62, Fm = mh * 0.5;
@@ -161,6 +161,18 @@ function draw2d(g, W, H, S, t) {
   g.beginPath(); g.arc(obs.x, obs.y - hh * 0.85, hh * 0.13, Math.PI * 0.7, Math.PI * 1.5); g.stroke();
 
   label(g, 'horizon', W - 14, hy - 12, 'right', INK2);
+  // the centre of the bow, on top of everything, with its label off to the side of you
+  if (cy > hy + 4) {
+    g.strokeStyle = 'rgba(234,240,255,.85)'; g.lineWidth = 1.2;
+    g.beginPath(); g.moveTo(cx - 7, cy); g.lineTo(cx + 7, cy); g.moveTo(cx, cy - 7); g.lineTo(cx, cy + 7); g.stroke();
+    const text = 'centre of the bow, ' + Math.round(S.sun) + '° below the horizon';
+    if (V.w < 600) label(g, text, cx, Math.min(cy, V.y1 - 30) + 18, 'center', INK2);
+    else {
+      const lx = cx + obs.h * 0.3, ly = Math.min(cy, V.y1 - 30);
+      g.strokeStyle = 'rgba(234,240,255,.4)'; g.beginPath(); g.moveTo(cx + 8, cy); g.lineTo(lx - 6, ly); g.stroke();
+      label(g, text, lx, ly, 'left', INK2);
+    }
+  }
   const top = G.project(G.cone(42 * Math.PI / 180, Math.PI / 2));
   if (top.y > hy) label(g, 'the bow is below the horizon now', cx, hy - V.h * 0.2, 'center');
   else label(g, '42° from the centre', cx, Math.max(V.y0 + 14, top.y - 16), 'center', INK2);

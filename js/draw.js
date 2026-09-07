@@ -4,8 +4,10 @@ export const MONO = '12px "JetBrains Mono", ui-monospace, monospace';
 export const INK = 'rgba(234,240,255,.9)';
 export const INK2 = 'rgba(234,240,255,.55)';
 
+export const labels = { alpha: 1 };   // set by the compositor to fade labels during zooms
 export function label(g, text, x, y, align = 'left', color = INK, font = LABEL) {
-  g.save();
+  if (labels.alpha <= 0.01) return;
+  g.save(); g.globalAlpha *= labels.alpha;
   g.font = font; g.textAlign = align; g.textBaseline = 'middle';
   g.lineJoin = 'round'; g.lineWidth = 4; g.strokeStyle = 'rgba(5,7,15,.75)';
   g.strokeText(text, x, y);

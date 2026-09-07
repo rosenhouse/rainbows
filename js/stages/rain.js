@@ -63,7 +63,7 @@ export function draw(g, W, H, S) {
   const V = S.V, { eye, d, lit, hero } = geo(S), { figH, ground } = layout(S);
   const L = Math.min(V.w, V.h) * 0.11, sp = fanSprite(S.sun, L);
   const drops = field.map(p => ({ x: V.x0 + p.x * V.w, y: V.y0 + p.y * (V.h * 0.85), fan: p.fan })).filter(p => p.y < eye.y - 12);
-  drops.push({ ...hero, fan: true });
+  if (S.sun <= 42) drops.push({ ...hero, fan: true });
 
   // the same storm sky and ground as the view from behind you
   let gr = g.createLinearGradient(0, 0, 0, ground);
@@ -76,13 +76,16 @@ export function draw(g, W, H, S) {
   g.beginPath(); g.moveTo(0, ground); g.lineTo(W, ground); g.stroke();
 
   // sunlight: parallel rays sweeping across the whole scene
+  g.save(); g.beginPath(); g.rect(0, 0, W, ground); g.clip();      // light stops at the ground
   g.strokeStyle = 'rgba(255,215,140,.28)'; g.lineWidth = 1.2;
   const tanE = Math.tan(S.sun * Math.PI / 180);
   for (let i = -8; i < 40; i++) {
     const y0 = V.y0 - V.h * 0.3 + i * V.h * 0.05;
     g.beginPath(); g.moveTo(-10, y0); g.lineTo(W + 10, y0 + (W + 20) * tanE); g.stroke();
   }
-  label(g, 'sunlight', V.x0 + 14, V.y0 + 14 + (V.x0 + 14) * tanE, 'left', INK2);
+  g.restore();
+  label(g, 'sunlight', V.x0 + 14, V.y0 + 16, 'left', INK2);
+  if (S.sun > 42) label(g, 'the Sun is above 42°: no drop can aim colour at your eye', V.cx, V.y0 + 40, 'center');
 
   // opposite the Sun, from your eye
   dashed(g, eye.x, eye.y, eye.x + d[0] * W, eye.y + d[1] * W);
@@ -122,5 +125,5 @@ export function draw(g, W, H, S) {
   g.beginPath(); g.moveTo(eye.x - figH * 0.11, eye.y + r * 0.9); g.lineTo(eye.x - figH * 0.11, eye.y + figH * 0.75); g.stroke();
   g.beginPath(); g.arc(eye.x, eye.y, r, Math.PI * 0.7, Math.PI * 1.5); g.stroke();
   g.fillStyle = '#fff'; g.beginPath(); g.arc(eye.x + r * 0.55, eye.y - r * 0.15, 2.2, 0, 7); g.fill();
-  label(g, 'your eye', eye.x - r - 8, eye.y, 'right');
+  label(g, 'your eye', eye.x, eye.y - r - 12, 'center');
 }

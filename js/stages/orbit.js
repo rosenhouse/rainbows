@@ -11,7 +11,7 @@ export const controls = ['sun'];
 export const ownTransition = true;
 export const caption = {
   title: 'Sunlight arrives in parallel',
-  body: 'The Sun is so far away that every ray reaching Earth travels in the same direction. Your rainbow lives on a cone that opens away from the Sun, 42° wide, with its tip at your eye. Drag the Sun lower or higher to move where you are standing.',
+  body: 'The Sun is so far away that every ray reaching Earth travels in the same direction. Your rainbow lives on a cone with its tip at your eye, opening 42° either side of the line pointing away from the Sun. Drag the Sun lower or higher to move where you are standing.',
 };
 
 const SUN = [-3.8, 0, 0], SUN_R = 0.55, SCENE_W = 5.5, SCENE_MID = [-1.55, 0, 0];
@@ -72,15 +72,17 @@ export function draw(g, W, H, S, time, f = 0) {
   // so it darkens toward the sky stage's ground colour as the camera lands.
   const ec = project(C, [0, 0, 0]);
   if (ec.z > 0.001) {
-    const r = Math.min(C.F / ec.z, W * 40);
+    const r = C.F / ec.z;
     const sunDir = v3.mul(A, -1), sx = v3.dot(sunDir, C.right), sy = -v3.dot(sunDir, C.up), sl = Math.hypot(sx, sy) || 1;
     const lit = 0.5 + 0.5 * v3.dot(C.fwd, A);           // how much of the visible disc is daylight
     const gr = g.createLinearGradient(ec.x + sx / sl * r, ec.y + sy / sl * r, ec.x - sx / sl * r, ec.y - sy / sl * r);
     gr.addColorStop(0, '#6DB4F5'); gr.addColorStop(Math.max(0.02, lit - 0.08), '#2C67C4'); gr.addColorStop(Math.min(0.98, lit + 0.06), '#10264F'); gr.addColorStop(1, '#070C1E');
-    g.fillStyle = gr; g.beginPath(); g.arc(ec.x, ec.y, r, 0, 7); g.fill();
+    // up close the disc is enormous: draw it as the half-plane below its top edge instead
+    g.beginPath(); if (r < W * 4) g.arc(ec.x, ec.y, r, 0, 7); else g.rect(-10, ec.y - r, W + 20, H + 20 - (ec.y - r));
+    g.fillStyle = gr; g.fill();
     const ground = smooth((C.t - 0.4) / 0.45);
     if (ground > 0) { g.fillStyle = `rgba(22,33,29,${ground})`; g.fill(); }
-    g.strokeStyle = `rgba(130,190,255,${0.35 * (1 - ground)})`; g.lineWidth = Math.min(r * 0.05, 40); g.beginPath(); g.arc(ec.x, ec.y, r * 1.025, 0, 7); g.stroke();
+    if (r < W * 2) { g.strokeStyle = `rgba(130,190,255,${0.35 * (1 - ground)})`; g.lineWidth = r * 0.04; g.beginPath(); g.arc(ec.x, ec.y, r * 1.01, 0, 7); g.stroke(); }
     if (f < 0.3) label(g, 'Earth', ec.x, ec.y + r + 22, 'center');
   }
 
@@ -100,7 +102,7 @@ export function draw(g, W, H, S, time, f = 0) {
     if (tip.z > 0.01) label(g, 'opposite the Sun', Math.min(tip.x, W - 14), tip.y + 14, 'right', INK2);
     let top = null;
     for (let k = 0; k < 64; k++) { const q = project(C, conePoint(p, 42 * Math.PI / 180, k / 64 * Math.PI * 2, CONE_L)); if (q.z > 0.01 && (!top || q.y < top.y)) top = q; }
-    if (top) label(g, 'your rainbow lives on this cone', Math.min(top.x, W - 14), top.y - 14, top.x > W * 0.6 ? 'right' : 'center', INK2);
+    if (top) label(g, S.sun > 42 ? 'the Sun is too high: the cone points below your horizon' : 'your rainbow lives on this cone', Math.min(top.x, W - 14), top.y - 14, top.x > W * 0.6 ? 'right' : 'center', INK2);
     g.restore();
   }
 }
