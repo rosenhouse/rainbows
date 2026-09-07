@@ -3,7 +3,7 @@ import { label, glowPath, dashed, INK2, MONO } from '../draw.js';
 
 export const name = 'Drop';
 export const scaleM = 1e-3;
-export const controls = ['lambda'];
+export const controls = ['sun', 'lambda'];
 export const caption = {
   title: 'In, bounce, out',
   body: 'Light bends as it enters the drop, bounces off the back, and bends again on the way out. Every colour bends by a slightly different amount, so each leaves at its own angle: red at 42.4°, violet at 40.6°. Slide through the colours to follow one at a time.',
@@ -69,6 +69,6 @@ export function draw(g, W, H, S) {
   label(g, 'bounces', b[0] + 16, b[1], 'left');
   label(g, 'bends out', ex[0] + 12, ex[1] + 20, 'left');
   label(g, 'a raindrop, about 1 mm', cx, cy + R + 24, 'center', INK2);
-  label(g, lam + ' nm · n = ' + n.toFixed(4), cx, cy - R - 20, 'center', INK2, MONO);
+  label(g, lam + ' nm · n = ' + n.toFixed(4), cx, cy + R + 44, 'center', INK2, MONO);
   label(g, 'to your eye', fwd[0] + (fwd[0] - ex[0]) * 0.9, fwd[1] + (fwd[1] - ex[1]) * 0.9 + 16, 'center', INK2);
 }

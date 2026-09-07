@@ -22,6 +22,11 @@ function fanSprite(sunDeg, L) {
   const size = Math.ceil(L * 2.4), c = document.createElement('canvas'); c.width = c.height = size;
   const g = c.getContext('2d'), o = size / 2, e = sunDeg * Math.PI / 180;
   const back = Math.PI + e;                                   // back toward the Sun (y down)
+  // the sunlight arriving at the drop, so each fan reads as "sunlight in, colour out"
+  const gi = g.createLinearGradient(o - Math.cos(e) * L, o - Math.sin(e) * L, o, o);
+  gi.addColorStop(0, 'rgba(255,215,140,0)'); gi.addColorStop(1, 'rgba(255,215,140,.6)');
+  g.strokeStyle = gi; g.lineWidth = 1.4;
+  g.beginPath(); g.moveTo(o - Math.cos(e) * L, o - Math.sin(e) * L); g.lineTo(o - Math.cos(e) * 3, o - Math.sin(e) * 3); g.stroke();
   const cols = [700, 610, 560, 500, 430];
   for (const sign of [1, -1]) {
     cols.forEach((l, i) => {

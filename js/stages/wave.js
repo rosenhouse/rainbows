@@ -5,7 +5,7 @@ import { label, INK2, MONO } from '../draw.js';
 
 export const name = 'Wave';
 export const scaleM = 1e-6;
-export const controls = ['split'];
+export const controls = ['sun', 'split'];
 export const caption = {
   title: 'Why colour bends differently',
   body: 'Light is a wave. In water it travels slower, so its crests bunch up and the whole wave swings toward the surface. Shorter waves, like violet, slow down a little more than longer ones, like red, so they swing a little further. That tiny difference, made in every drop in the sky, is the rainbow.',
